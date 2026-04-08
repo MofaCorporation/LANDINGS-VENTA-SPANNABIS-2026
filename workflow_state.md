@@ -112,6 +112,4 @@ Cada ítem: PASS / FAIL con evidencia (pasos, captura, commit).
 ## 9) Notas de ejecución (log corto, solo hechos)
 | Fecha | ID | Resumen | Evidencia |
 |-------|-----|---------|-----------|
-| | | | |
-
-*(vacío — listo para usar)*
+| 2026-04-08 | `GOV-TF-002` | Repo GitHub creado y push `main` | `gh repo create los-monstruos-de-tarumba`, remoto `origin` |

@@ -14,6 +14,7 @@ Sustituir `[TODO:…]` en RECON o al preparar producción.
 | `<COLLECTION_NAME>` | Nombre campaña / repo legible | Los monstruos de Tarumba |
 | `<DOMAIN>` | Dominio producción | `agents.md`, `project_config.md`, hreflang, `BASE_URL` |
 | `<REPO_NAME>` | Slug GitHub | `los-monstruos-de-tarumba` |
+| `<REPO_URL>` | URL remota | `https://github.com/MofaCorporation/los-monstruos-de-tarumba` |
 | `<BASE_URL>` | URL absoluta base (HTTPS) | Redsys `notify` / `ok` / `ko`, enlaces canónicos |
 | `<DB_HOST>` | Host MySQL | Docker service o localhost |
 | `<DB_NAME>` | Nombre BD | p. ej. `ecommerce` o `tarumbas_farm` |
