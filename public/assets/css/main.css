@@ -1,0 +1,5 @@
+/* Reseteos mínimos y variables de respaldo cuando no hay tema de producto en <html> */
+:root {
+  --font-headline: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+}

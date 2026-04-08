@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "lang_switch": "Español",
+    "home": "Home",
+    "checkout": "Buy",
+    "coming_soon": "coming soon"
+  },
+  "site": {
+    "default_title": "Tarumba's Farm",
+    "brand": "Tarumba's Farm"
+  },
+  "meta": {
+    "dj_piggy": {
+      "document_title": "DJ PIGGY · Tarumba's Farm",
+      "description": "DJ Piggy — Social, creative hybrid. Collector seeds at Tarumba's Farm."
+    }
+  },
+  "product": {
+    "common": {
+      "buy_alt": "Buy seeds",
+      "stock_limited": "Limited stock",
+      "symptoms_label": "SYMPTOMS",
+      "symptoms_heading": "When it hits",
+      "criteria_heading": "Criteria",
+      "criteria_tagline": "NOT HYPE. IT'S CRITERIA.",
+      "dare_heading": "Do you dare?",
+      "legal": "Adults only. Comply with local regulations on collector seeds. We do not encourage illegal cultivation.",
+      "made_for_prefix": "MADE FOR:",
+      "chars_heading": "Characteristics"
+    },
+    "dj_piggy": {
+      "subtitle": "Booth on fire",
+      "lead": "The mental and social monster. Less body, more head. Cheerful chaos, high energy, constant motion.",
+      "block_title": "The lift",
+      "p1": "The party starts in your head.",
+      "p2": "Ideas, laughter, chaos… everything spikes at once.",
+      "p3": "DJ Piggy won't chill you out—it spins you up.",
+      "p4": "DJ Piggy wasn't built to stay quiet. It was built to fire up the engine.",
+      "p5": "The lift is on the inside: faster thoughts, easy conversation, loose laughter, and a sense of motion. The plant is more open and less compact, with a more complex aroma profile and a less physical hit than its heavier sisters. It doesn't relax the body—it wakes up the head. And if you overdo it, it can speed up more than you'd like.",
+      "tagline": "SOCIAL. CEREBRAL. IN MOTION.",
+      "spec_lead": "Hybrid with sativa lean. Active, cerebral, great for social or creative moments.",
+      "li1": "Type: Hybrid",
+      "li2": "Yield: Medium–high",
+      "li3": "Structure: Open",
+      "li4": "Aroma: Citrus, haze, sweet",
+      "li5": "Airier plant with a more pronounced mental edge",
+      "sticker": "HYPE ON",
+      "c1": "Hybrid with sativa lean",
+      "c2": "More open plant, less compact",
+      "c3": "More complex aroma: citrus, haze, sweet",
+      "c4": "Good yield but airier structure",
+      "s1t": "Mental stimulation",
+      "s1d": "Quick thoughts, flowing conversation.",
+      "s2t": "Creativity",
+      "s2d": "Ideas that keep jumping.",
+      "s3t": "Energy",
+      "s3d": "Social lift, ready to make plans.",
+      "s4t": "Connection",
+      "s4d": "If you overdo it, it can race too hard. Pace yourself.",
+      "crit1": "Selected, not created",
+      "crit2": "It doesn't get in for being pretty",
+      "crit3": "It gets in for a sharp, social, on-the-move head",
+      "made_for": "Socializing · Creativity · Music, art · Daytime activities",
+      "chars_aria": "Characteristics",
+      "made_for_aria": "MADE FOR:"
+    }
+  },
+  "errors": {
+    "not_found": "Page not found"
+  },
+  "footer": {
+    "terms": "TERMS",
+    "legal": "LEGAL NOTICE",
+    "ig": "IG",
+    "x": "X",
+    "copy": "© :year Tarumba's Farm"
+  }
+}

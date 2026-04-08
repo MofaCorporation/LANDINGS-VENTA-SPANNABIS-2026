@@ -1,0 +1,78 @@
+{
+  "nav": {
+    "lang_switch": "English",
+    "home": "Inicio",
+    "checkout": "Comprar",
+    "coming_soon": "próximamente"
+  },
+  "site": {
+    "default_title": "Tarumba's Farm",
+    "brand": "Tarumba's Farm"
+  },
+  "meta": {
+    "dj_piggy": {
+      "document_title": "DJ PIGGY · Tarumba's Farm",
+      "description": "DJ Piggy — Híbrido social y creativo. Semillas de colección en Tarumba's Farm."
+    }
+  },
+  "product": {
+    "common": {
+      "buy_alt": "Comprar semillas",
+      "stock_limited": "Stock limitado",
+      "symptoms_label": "SÍNTOMAS",
+      "symptoms_heading": "Cuando pega",
+      "criteria_heading": "Criterio",
+      "criteria_tagline": "NO ES HYPE. ES CRITERIO.",
+      "dare_heading": "¿Te atreves?",
+      "legal": "Solo para mayores de edad. Cumple la normativa local sobre semillas de colección. No fomentamos el cultivo ilegal.",
+      "made_for_prefix": "HECHA PARA:",
+      "chars_heading": "Características"
+    },
+    "dj_piggy": {
+      "subtitle": "Cabina en llamas",
+      "lead": "El monstruo mental y social. Menos cuerpo, más cabeza. Caos alegre, energía alta y movimiento constante.",
+      "block_title": "Subidón",
+      "p1": "La fiesta empieza en la cabeza.",
+      "p2": "Ideas, risas, caos… todo sube de golpe.",
+      "p3": "DJ Piggy no te relaja: te pone a girar.",
+      "p4": "DJ Piggy no está hecho para callarse. Está hecho para arrancar la máquina.",
+      "p5": "Aquí la subida va por dentro: pensamientos más rápidos, conversación fácil, risa suelta y sensación de movimiento. La planta es más abierta y menos compacta, con un perfil aromático más complejo y una pegada menos física que sus hermanas más pesadas. No relaja el cuerpo: activa la cabeza. Y si te pasas, puede acelerar más de la cuenta.",
+      "tagline": "SOCIAL. CEREBRAL. EN MOVIMIENTO.",
+      "spec_lead": "Híbrido con tendencia sativa. Activo, cerebral y perfecto para momentos sociales o creativos.",
+      "li1": "Tipo: Híbrido",
+      "li2": "Producción: Media-alta",
+      "li3": "Estructura: Abierta",
+      "li4": "Aroma: Cítrico, haze, dulce",
+      "li5": "Planta más aireada y mentalmente más marcada",
+      "sticker": "HYPE ON",
+      "c1": "Híbrido con tendencia sativa",
+      "c2": "Planta más abierta, menos compacta",
+      "c3": "Aroma más complejo: cítrico, haze, dulce",
+      "c4": "Producción buena pero más aireada",
+      "s1t": "Estimulación mental",
+      "s1d": "Pensamiento rápido, conversación fluida.",
+      "s2t": "Creatividad",
+      "s2d": "Ideas que no paran de saltar.",
+      "s3t": "Energía",
+      "s3d": "Subida social, ganas de plan.",
+      "s4t": "Conexión",
+      "s4d": "Si te pasas, puede acelerar de más. Dosifica.",
+      "crit1": "Seleccionada, no creada",
+      "crit2": "No entra por bonita",
+      "crit3": "Entra por cabeza despierta, social y movimiento",
+      "made_for": "Socializar · Creatividad · Música, arte · Actividades diurnas",
+      "chars_aria": "Características",
+      "made_for_aria": "HECHA PARA:"
+    }
+  },
+  "errors": {
+    "not_found": "Página no encontrada"
+  },
+  "footer": {
+    "terms": "TÉRMINOS",
+    "legal": "AVISO LEGAL",
+    "ig": "IG",
+    "x": "X",
+    "copy": "© :year Tarumba's Farm"
+  }
+}
