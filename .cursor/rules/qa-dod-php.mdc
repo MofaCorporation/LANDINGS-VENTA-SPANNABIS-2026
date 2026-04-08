@@ -1,0 +1,46 @@
+---
+description: "QA-DOD-PHP-001: Definition of Done para PHP: sintaxis, SQL preparado, escape HTML, Redsys, i18n, diseño TF."
+globs: ["**/*"]
+alwaysApply: true
+---
+# QA-DOD-PHP-001 — DoD PHP + verificación (ES + EN IDs)
+
+## Objetivo
+Cada cambio es **cerrable** con criterios objetivos (no “funciona en mi máquina” sin pruebas).
+
+## DoD bloqueante (Tarumba's Farm)
+1) **Sintaxis:** `php -l` sin errores en cada archivo `.php` modificado
+2) **SQL:** solo prepared statements para datos externos (`PHP-SQL-001`)
+3) **XSS:** salida HTML con `htmlspecialchars` donde corresponda (`PHP-XSS-001`)
+4) **Redsys:** firma validada en notify; estado de pedido no basado solo en URL OK (`REDSYS-SIGN-001`)
+5) **i18n:** nuevas cadenas en `es.json` **y** `en.json` (`I18N-LANG-001`)
+6) **Diseño:** sin desviación de `context/design_tokens.md` y referencias `EJEMPLOS/` (`DS-TF-001`)
+
+> Si el repo añade PHPUnit/PHPStan en CI, incorporar sus comandos como bloqueantes adicionales en `project_config.md` y aquí.
+
+## Entrega del agente (ID: `QA-REPORT-PHP-001`)
+1) Resumen breve
+2) Archivos tocados
+3) Reproducción antes/después
+4) Tests (si existen): qué se añadió o actualizó
+5) Evidencia: salida de `php -l` (y otros comandos)
+6) STOP points tocados: plan y rollback
+
+## Por tipo de cambio
+| Tipo | ID | Requisito extra |
+|------|-----|-----------------|
+| SQL / modelo | `QA-DB-010` | Actualizar `context/db_schema.sql` si cambia esquema persistido |
+| Redsys | `QA-REDSYS-010` | Probar sandbox; ver doble notify si aplica |
+| Plantilla / HTML | `QA-UI-010` | Revisión manual + diseño TF |
+| i18n | `QA-I18N-010` | Diff de claves ES vs EN |
+
+## Bien vs Mal
+- **Bien:** fix + `php -l` + paridad i18n + notify con `hash_equals`
+- **Mal:** concatenar SQL; echo sin escape; marcar pagado solo en `checkout_ok`
+
+## Plantilla de entrega
+**Resumen** — …  
+**Archivos** — …  
+**Reproducción** — …  
+**Verificación** — `php -l` → PASS …  
+**Riesgos** — …

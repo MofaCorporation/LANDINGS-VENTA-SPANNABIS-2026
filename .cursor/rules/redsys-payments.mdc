@@ -1,0 +1,25 @@
+---
+description: "REDSYS-SIGN-001: TPV Redsys — firma HMAC, notify server-to-server, sandbox/prod, no confiar en URL OK."
+globs: ["**/Redsys*.php", "**/Checkout*.php", "**/checkout*.php", "**/redsys*.php", "**/Services/**"]
+alwaysApply: false
+---
+# REDSYS-SIGN-001 — Pagos Redsys (PHP)
+
+## Cuándo aplica
+Cualquier cambio en `RedsysService`, controladores de notify/ok/ko, plantillas de checkout o configuración Redsys.
+
+## Reglas
+1) **Firma:** generar y validar con la misma lógica (HMAC-SHA256 + diversificación de clave según `redsys-php-flujo.md` / implementación real del repo).
+2) **Comparación segura:** `hash_equals()` para firmas.
+3) **Autorización de pago:** códigos según documentación (`Ds_Response` numérico: autorización OK cuando el código cumple la regla del proyecto, típicamente inferior a 100 según `redsys-php-flujo.md`); verificar contra docs actualizadas del comercio.
+4) **Fuente de verdad del estado del pedido:** respuesta **notify** (POST server-to-server), **no** la URL OK del navegador.
+5) **HTTPS** en producción para URLs configuradas en Redsys.
+6) **Sandbox vs producción:** endpoints `sis-t.redsys.es` vs `sis.redsys.es` según flag de config.
+7) **Logs:** sin volcar datos sensibles de tarjeta; correlación por `Ds_Order` u order_ref interno.
+
+## Archivos de contexto obligatorios
+- `context/redsys_flow.md`
+- `redsys-php-flujo.md`
+
+## STOP
+Sin plan escrito: no cambiar claves, algoritmo de firma, ni orden de parámetros del formulario POST.

@@ -1,0 +1,28 @@
+---
+description: "I18N-LANG-001: i18n ES/EN con Lang.php y JSON — paridad de claves, prefijos URL, sin strings sueltos en UI."
+globs: ["**/Lang/**", "**/templates/**", "**/*.php"]
+alwaysApply: false
+---
+# I18N-LANG-001 — Idiomas ES / EN (PHP + JSON)
+
+## Cuándo aplica
+Plantillas, navegación, mensajes de error, checkout, meta textos de UI, y cualquier nuevo texto visible.
+
+## Reglas
+1) **Fuente:** `src/Lang/es.json` y `src/Lang/en.json` (rutas reales según código; ajustar si el repo difiere).
+2) **API:** `Lang::t('clave.anidada')` — ver `i18n-sistema-idiomas.md` para comportamiento (escape en `t()` según implementación real).
+3) **Paridad:** toda clave nueva en **ambos** JSON con el mismo árbol de claves.
+4) **URL:** prefijo `/es/` y `/en/` coherente con router (ver `context/i18n_map.md`).
+5) **Producto en BD:** campos `name_es` / `name_en`, `slug_es` / `slug_en`, etc., según esquema.
+6) **SEO:** `hreflang` y `lang` en `<html>` alineados con idioma activo.
+
+## Prohibido
+- Cadenas de UI hardcodeadas en español o inglés en plantillas (salvo constantes legales acordadas y documentadas).
+- Añadir solo un idioma “para luego”.
+
+## Contexto
+- `context/i18n_map.md`
+- `i18n-sistema-idiomas.md`
+
+## QA
+- Comparar sets de claves ES vs EN (script o revisión manual) en cada PR que toque traducciones.

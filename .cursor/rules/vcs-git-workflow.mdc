@@ -1,0 +1,44 @@
+---
+description: "VCS-GIT-001: Commits, ramas y PR para PHP; secretos prohibidos; alineación con DoD del proyecto."
+globs: ["**/*"]
+alwaysApply: true
+---
+# VCS-GIT-001 — Git Workflow — ES + EN IDs
+
+## Objetivo
+Commits **acotados**, auditables, sin secretos, con verificación acorde al stack PHP de Tarumba's Farm.
+
+## Cuándo hacer commit
+Solo cuando:
+- Un objetivo claro (un bug o una feature)
+- No hay `.env`, claves Redsys ni dumps con datos reales en el diff
+- DoD local del proyecto cumplido (ver `agents.md`): al menos `php -l` en archivos tocados; si hay tests, deben pasar
+
+## Cuándo hacer push
+- Commit no WIP
+- Sin tocar STOP points sin plan (ver `project_config.md`)
+
+## Qué NUNCA commitear
+- `.env` con valores reales
+- `config/database.php` / `config/redsys.php` si contienen secretos reales
+- Claves API, tokens, dumps de clientes
+
+## Ramas y mensajes
+- Rama: `fix/<area>-<short>` o `feat/<area>-<short>`
+- Mensaje: `<type>(<area>): <short> [<ID>]`
+  - type: `fix | feat | chore | test | docs | ci`
+  - area: `php | db | redsys | i18n | ui | docker | qa`
+  - ID: ej. `REDSYS-SIGN-001`, `QA-DOD-PHP-001`
+
+Ejemplos:
+- `fix(redsys): validate notify signature with hash_equals [REDSYS-SIGN-001]`
+- `feat(i18n): add checkout strings es/en parity [I18N-LANG-001]`
+
+## Checklist de PR
+- Resumen + archivos tocados
+- Pasos de reproducción
+- Evidencia: `php -l` (y tests si existen)
+- STOP point: riesgo + rollback + verificación
+
+## Si GitHub no está listo
+Dejar **Commit Plan** en el informe: rama, mensajes, comandos `git` sugeridos.

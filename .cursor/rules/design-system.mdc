@@ -1,0 +1,49 @@
+---
+description: "DS-TF-001: Design system Tarumba's Farm — dark cómic, variables CSS, Bangers/Satoshi, clases tf-*, sin inventar estilos."
+globs: ["**/*.{php,css,html,js}"]
+alwaysApply: true
+---
+# DS-TF-001 — Design System Tarumba's Farm
+
+## Objetivo
+Todas las páginas (5 landings + checkout + ok/ko) deben ser **visualmente coherentes** con las referencias aprobadas en `EJEMPLOS/`. **No inventar** un nuevo look.
+
+## Fuente de verdad
+1) Archivos en `EJEMPLOS/` (HTML exportado + `mount-DElUb8cY.css` o CSS unificado del proyecto)
+2) `context/design_tokens.md`
+
+## Modo y estética
+- **Dark mode siempre** (`<html class="dark">` en referencias)
+- Bordes gruesos (4–8px), sombras tipo **offset / cómic** (`sticker-shadow`, `box-shadow: 8px 8px #000`, variantes con `var(--pc)`)
+- **Stickers:** rotación (`-rotate-12`, etc.), borde negro
+- **Hover:** `translate-y` / `translate-x`, `drop-shadow` (p. ej. `drop-shadow-[2px_2px_0_var(--nav-stroke)]`)
+
+## Tipografía (no negociable)
+| Uso | Regla |
+|-----|--------|
+| Títulos marca / impacto | **Bangers**, clase **`tf-title-bangers`**, **mayúsculas** |
+| Headlines | `var(--font-headline)` (Satoshi), **`font-bold`** |
+| Cuerpo | `var(--font-body)` (Satoshi) |
+
+Imports de fuentes en referencia: Google Fonts Bangers + Fontshare Satoshi (ver CSS de ejemplo).
+
+## Color (no negociable)
+- **Prohibido** hardcodear colores de marca arbitrarios fuera del sistema
+- **Por página / variedad:** inyectar en `<html style="...">` las variables documentadas en `design_tokens.md`: `--pc`, `--pc-dim`, `--sec`, `--ter`, `--bg`, `--surf`, `--surf-cont`, `--on-pc`, `--nav-stroke`
+- Uso en CSS/Tailwind de referencia: `bg-[var(--bg)]`, `text-[var(--pc)]`, `border-[var(--sec)]`, etc.
+
+### Excepciones controladas (como en referencias)
+- Grises de texto utilitarios en ejemplos: `#f0f0f0`, `#f6f6f6`, `#e4e2e2`, `#f2f2f2`, `#bcbcbc`, `#a0a0a0`
+- Negro / blanco para contraste: `black`, `white`, `#1a1919` en bordes de sección
+- Si se añade un color nuevo → actualizar **`context/design_tokens.md`** y obtener aprobación explícita (STOP `DS-TF-001`)
+
+## Clases de componente (referencia)
+- `tf-title-bangers`, `tf-nav-bangers`, `tf-bangers-fill`, `tf-btn-sticker`, `tf-panel-sticker`, `sticker-shadow`
+- Material Symbols cuando la referencia los usa (`material-symbols-outlined`)
+
+## Assets
+- Imágenes existentes en el proyecto (`public/assets/...` según implementación); **no sustituir** por placeholders genéricos sin criterio de marca
+
+## Bien vs Mal
+- **Bien:** misma jerarquía tipográfica y mismas variables por variedad que en `EJEMPLOS/TOXIC MUTANT...html` (y resto de landings)
+- **Mal:** nueva paleta, fuente distinta a Bangers/Satoshi para títulos/cuerpo, sombras suaves “material design” que rompan el estilo cómic

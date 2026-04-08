@@ -1,0 +1,59 @@
+---
+description: "CTX-ROUTING-001: Enrutador de contexto. Decide qué archivos consultar según el tipo de tarea (PHP, Redsys, i18n, diseño Tarumba's Farm)."
+globs: ["**/*"]
+alwaysApply: true
+---
+# CTX-ROUTING-001 — Context Router (ES + EN IDs)
+
+## Objetivo
+Reducir tokens y errores: el agente **solo** debe pedir o usar el contexto necesario *según el problema*.
+
+## Regla base (siempre)
+1) **Consultar** (o adjuntar) estos tres archivos:
+   - `agents.md`
+   - `project_config.md`
+   - `workflow_state.md`
+
+2) Si la tarea toca **lógica PHP** (controladores, modelos, Redsys, SQL): aplicar **QA-DOD-PHP-001** (regla `qa-dod-php.mdc`) y verificar DoD de `agents.md`.
+
+3) Antes de planificar, declarar:
+   - **Objetivo:** `OBJ-TIENDA-REDSYS` (o el ID vigente en `workflow_state.md`)
+   - **DoD:** sintaxis PHP, prepared statements, escape HTML, Redsys, i18n ES/EN, diseño TF
+   - **STOP points** si aplica: `DB-MIGRATION-001`, `REDSYS-SIGN-001`, `I18N-LANG-001`, `SEC-XSS-001`, `DS-TF-001`
+
+## Enrutado por tema (solo lo necesario)
+
+### PHP / Router / Controllers
+- Adjuntar: `estructura-proyecto.md`, `context/routes_map.md`, `context/flows_core.md`
+- Código: `public/index.php`, `src/Core/Router.php`, `src/Controllers/*`
+
+### Base de datos (STOP)
+- ID: `DB-MIGRATION-001`
+- Adjuntar: `context/db_schema.sql`, scripts SQL reales del repo
+- Prohibido inventar tablas/columnas
+
+### Redsys / pagos (STOP)
+- ID: `REDSYS-SIGN-001`
+- Adjuntar: `context/redsys_flow.md`, `redsys-php-flujo.md`, `src/Services/RedsysService.php` (si existe)
+- Activar regla: `redsys-payments.mdc`
+
+### i18n (STOP si toca claves, slugs o routing de idioma)
+- ID: `I18N-LANG-001`
+- Adjuntar: `context/i18n_map.md`, `i18n-sistema-idiomas.md`, `src/Lang/es.json`, `src/Lang/en.json`
+- Activar regla: `i18n-lang.mdc`
+
+### Diseño / UI (landings, checkout, CSS)
+- ID: `DS-TF-001`
+- Adjuntar: `context/design_tokens.md`, carpeta `EJEMPLOS/` (HTML/CSS de referencia)
+- Activar regla: `design-system.mdc`
+
+### Git / PR
+- Adjuntar: `vcs-git-workflow.mdc` (siempre aplica)
+
+## Si falta contexto
+1) Marcar **DESCONOCIDO**
+2) Pedir archivo o ruta concreta
+3) No asumir APIs ni columnas
+
+## Mantenimiento de `/context`
+Si el PR altera esquema, rutas, Redsys, i18n o tokens visuales: actualizar el archivo de `context/` correspondiente y una línea en `workflow_state.md` → Notas de ejecución.

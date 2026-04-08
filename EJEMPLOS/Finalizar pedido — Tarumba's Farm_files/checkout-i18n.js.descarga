@@ -1,0 +1,65 @@
+import { TRANSLATIONS, DEFAULT_LANG } from "../../data/translations.js";
+import { initCheckoutSummary } from "./checkout-summary.js";
+
+function normalizeLang() {
+  const q = new URLSearchParams(window.location.search).get("lang");
+  if (q === "en") return "en";
+  return DEFAULT_LANG;
+}
+
+function applyTranslations(lang) {
+  const dict = TRANSLATIONS[lang] ?? TRANSLATIONS[DEFAULT_LANG];
+  document.documentElement.lang = lang;
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    const val = dict[key];
+    if (val == null) return;
+    const mode = el.getAttribute("data-i18n-mode");
+    if (mode === "html") el.innerHTML = val;
+    else el.textContent = val;
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    const val = dict[key];
+    if (val != null && "placeholder" in el) el.placeholder = val;
+  });
+
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-aria-label");
+    const val = dict[key];
+    if (val != null) el.setAttribute("aria-label", val);
+  });
+
+  document.querySelectorAll("[data-i18n-option]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-option");
+    const val = dict[key];
+    if (val != null) el.textContent = val;
+  });
+
+  const titleKey = document.querySelector("title")?.getAttribute("data-i18n-title");
+  if (titleKey && dict[titleKey]) document.title = dict[titleKey];
+
+  document.documentElement.dataset.i18nApplied = lang;
+  window.__I18N_READY__ = true;
+}
+
+function init() {
+  const lang = normalizeLang();
+  applyTranslations(lang);
+  initCheckoutSummary();
+
+  const form = document.getElementById("checkout-form");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+    });
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init, { once: true });
+} else {
+  init();
+}
