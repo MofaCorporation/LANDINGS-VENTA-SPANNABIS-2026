@@ -25,7 +25,7 @@ $logoUrl  = asset_url('/assets/img/ui/logo-tarumbas-farm.png');
 <div class="checkout-wrap">
   <div class="tf-card" style="text-align:center;padding:2rem 1.25rem 2.25rem">
     <p class="checkout-result-lead"><?= Lang::t('checkout.ok_lead') ?></p>
-    <a class="checkout-back-link" href="<?= htmlspecialchars(url_lang('/'), ENT_QUOTES, 'UTF-8') ?>"><?= Lang::t('checkout.ok_home') ?></a>
+    <a class="checkout-back-link" href="<?= htmlspecialchars(url_lang('/lady-cupcake'), ENT_QUOTES, 'UTF-8') ?>"><?= Lang::t('checkout.ok_home') ?></a>
   </div>
 </div>
 
