@@ -64,9 +64,17 @@ final class PacklinkService
         error_log('[Packlink] URL: ' . $url);
         error_log('[Packlink] Params: ' . http_build_query($params));
 
-        $raw = $this->httpGetJson($url, [
-            'Authorization: Bearer ' . $this->apiKey,
+        $apiKey = $this->apiKey;
+        $headers = [
+            'Authorization: ' . $apiKey,
+            'Content-Type: application/json',
             'Accept: application/json',
+        ];
+
+        error_log('[Packlink] Authorization header: Authorization: ' . substr($apiKey, 0, 8) . '...');
+
+        $raw = $this->httpGetJson($url, [
+            ...$headers,
         ]);
 
         $items = $this->coerceServicesList($raw);
@@ -137,6 +145,7 @@ final class PacklinkService
         curl_setopt($ch, CURLOPT_TIMEOUT, 8);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 4);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
 
         $body = curl_exec($ch);
         $err  = curl_error($ch);
