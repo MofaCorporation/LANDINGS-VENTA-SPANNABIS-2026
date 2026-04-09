@@ -30,7 +30,7 @@ Listar rutas que la **UI pública** usa y que no deben romperse. Las landings de
 | `/en/holy-boss` | landing Holy Boss | P0 | |
 | `/es/lady-cupcake` | landing Lady Cupcake | P0 | `ProductController::ladyCupcake()` |
 | `/en/lady-cupcake` | landing Lady Cupcake | P0 | |
-| `/es/checkout` | CTA comprar | P0 | Carrito + form Redsys (pendiente 501) |
+| `/es/checkout` | CTA comprar | P0 | Formulario comprador + POST a Redsys (`?variety=` kebab-case) |
 | `/en/checkout` | CTA comprar | P0 | |
 | `/redsys/notify` | Redsys POST | P0 | Sin UI; server-to-server |
 | `/es/checkout/ok` | retorno usuario | P1 | No marca pago solo |
@@ -50,7 +50,7 @@ Listar rutas que la **UI pública** usa y que no deben romperse. Las landings de
 ## 4) Pendientes / sospechosas
 | Ruta | Acción |
 |------|--------|
-| `/checkout` | Implementar flujo real (actualmente 501) |
+| `/redsys/notify` | Debe ser **HTTPS público** en producción para que Redsys confirme el pago (en local el S2S no llega salvo túnel). |
 
 ## 5) Notas de cambios
 | Fecha | ID | Resumen |

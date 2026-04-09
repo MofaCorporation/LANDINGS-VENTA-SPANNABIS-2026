@@ -20,5 +20,9 @@ if (!defined('BASE_URL')) {
 use App\Core\Router;
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$bp  = base_path();
+if ($bp !== '' && ($uri === $bp || str_starts_with($uri, $bp . '/'))) {
+    $uri = substr($uri, strlen($bp)) ?: '/';
+}
 
 Router::dispatch($uri);

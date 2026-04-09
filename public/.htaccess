@@ -1,9 +1,11 @@
+# Front controller en public/. Funciona en raíz del vhost y bajo Alias /drops → esta carpeta
+# (BASE_PATH=/drops en PHP + URLs tipo /drops/es/...).
 Options -Indexes
 RewriteEngine On
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
+RewriteRule ^ index.php [QSA,L]
 
 <FilesMatch "\.(env|md|lock|gitignore)$">
     Require all denied

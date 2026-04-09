@@ -1,6 +1,6 @@
 # Los monstruos de Tarumba
 
-Tienda **Tarumba's Farm**: cinco landings de semillas de colección (ES/EN), checkout con **TPV Redsys** y stack PHP 8.2+ sin framework.
+Tienda **Tarumba's Farm**: cinco landings de coleccionables (ES/EN), checkout con **TPV Redsys** y stack PHP 8.2+ sin framework.
 
 ## Documentación
 

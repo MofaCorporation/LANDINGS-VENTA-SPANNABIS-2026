@@ -1,0 +1,27 @@
+{
+  "toxic-mutant": {
+    "price_cents": 3490,
+    "hero": "/assets/img/productos/toxic-mutant/hero-toxic-mutat-web.png",
+    "meta_key": "toxic_mutant"
+  },
+  "nitro-bud": {
+    "price_cents": 2990,
+    "hero": "/assets/img/productos/nitro-bud/hero-nitro-bud-web.png",
+    "meta_key": "nitro_bud"
+  },
+  "dj-piggy": {
+    "price_cents": 3290,
+    "hero": "/assets/img/productos/dj-piggy/hero-dj-piggy-web.png",
+    "meta_key": "dj_piggy"
+  },
+  "holy-boss": {
+    "price_cents": 3190,
+    "hero": "/assets/img/productos/holy-boss/hero-holy-boss-web.png",
+    "meta_key": "holy_boss"
+  },
+  "lady-cupcake": {
+    "price_cents": 3090,
+    "hero": "/assets/img/productos/lady-cupcake/hero-lady-cupcake-web.png",
+    "meta_key": "lady_cupcake"
+  }
+}

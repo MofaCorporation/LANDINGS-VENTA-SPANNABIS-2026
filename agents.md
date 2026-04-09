@@ -21,7 +21,7 @@ Regla: documentación de producto usa **Tarumba's Farm**. Infra/URLs usan el dom
 ---
 
 ## 2) Alcance real del producto (NO negociar)
-- **Tienda de semillas de colección** con **5 variedades**, cada una con **landing propia** (ES + EN).
+- **Tienda de coleccionables** con **5 variedades**, cada una con **landing propia** (ES + EN).
 - **Un checkout** con **TPV Redsys** (form POST firmado + notificación server-to-server).
 - **Multiidioma** ES/EN con `src/Lang/es.json`, `src/Lang/en.json` y clase `Lang`.
 - **Sin framework PHP:** micro-router propio, Composer PSR-4, front controller en `public/index.php`, Apache + `.htaccess`.

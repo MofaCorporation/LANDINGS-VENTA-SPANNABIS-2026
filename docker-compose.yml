@@ -1,6 +1,6 @@
 # Desarrollo local: PHP 8.2 + Apache (DocumentRoot /public) y MySQL 8.
 # Uso: docker compose up -d
-# Web: http://localhost:8080  (ajusta el puerto en "ports" si 8080 está ocupado)
+# Web: http://localhost:8080/drops/es/... (Alias /drops → public/). También sirve rutas en raíz /es/...
 
 services:
   web:
@@ -10,7 +10,8 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
-      BASE_URL: http://localhost:8080
+      BASE_URL: http://localhost:8080/drops
+      BASE_PATH: drops
       DB_HOST: db
       DB_NAME: ecommerce
       DB_USER: app

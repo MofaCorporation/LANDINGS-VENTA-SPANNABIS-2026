@@ -2,19 +2,19 @@
   "meta": {
     "holy_boss": {
       "document_title": "HOLY BOSS · Tarumba's Farm",
-      "description": "Holy Boss — Sativa dominante e intensa. Semillas de colección en Tarumba's Farm."
+      "description": "Holy Boss — Sativa dominante e intensa. Coleccionables en Tarumba's Farm."
     },
     "lady_cupcake": {
       "document_title": "LADY CUPCAKE · Tarumba's Farm",
-      "description": "Lady Cupcake — Híbrido dulce y equilibrado. Semillas de colección en Tarumba's Farm."
+      "description": "Lady Cupcake — Híbrido dulce y equilibrado. Coleccionables en Tarumba's Farm."
     },
     "nitro_bud": {
       "document_title": "NITRO BUD · Tarumba's Farm",
-      "description": "Nitro Bud — Autofloreciente rápida y fácil. Semillas de colección en Tarumba's Farm."
+      "description": "Nitro Bud — Autofloreciente rápida y fácil. Coleccionables en Tarumba's Farm."
     },
     "toxic_mutant": {
       "document_title": "TOXIC MUTANT · Tarumba's Farm",
-      "description": "Toxic Mutant — Genética índica densa y resinosa. Semillas de colección en Tarumba's Farm."
+      "description": "Toxic Mutant — Genética índica densa y resinosa. Coleccionables en Tarumba's Farm."
     }
   },
   "product": {
@@ -56,7 +56,9 @@
       "crit2": "No entra por bonita",
       "crit3": "Entra por altura mental y exigencia",
       "made_for": "Usuarios experimentados · Creatividad intensa · Momentos activos · Enfoque · No para relajarse",
-      "dare_sub": "No todos aguantan la corona.",
+      "dare": {
+        "text": "No todos aguantan la corona."
+      },
       "chars_aria": "Características",
       "made_for_aria": "HECHA PARA:"
     },
@@ -91,6 +93,9 @@
       "crit2": "No entra por bonita",
       "crit3": "Entra por disfrute, equilibrio y presencia resinosa",
       "made_for": "Bajar sin desaparecer · Afterwork · Disfrute tranquilo · Consumo social suave · Relajarse sin quedar fuera",
+      "dare": {
+        "text": "No te tumba. Te envuelve."
+      },
       "chars_aria": "Características",
       "made_for_aria": "HECHA PARA:"
     },
@@ -131,6 +136,9 @@
       "crit2": "No entra por postureo",
       "crit3": "Entra por rapidez, sencillez y resultados",
       "made_for": "Uso diario · Cultivadores novatos · Espacios pequeños · Cultivo rápido · Consumo sin quedar KO",
+      "dare": {
+        "text": "Va al grano."
+      },
       "chars_aria": "Características",
       "made_for_aria": "HECHA PARA:"
     },
@@ -168,8 +176,16 @@
       "crit2": "No entra por bonita",
       "crit3": "Entra por pegada, resina y presencia",
       "made_for": "Final del día · Relajación total · Apagar el ruido mental · Descanso profundo",
+      "dare": {
+        "text": "Te hunde despacio."
+      },
       "chars_aria": "Características",
       "made_for_aria": "HECHA PARA:"
+    },
+    "dj_piggy": {
+      "dare": {
+        "text": "La fiesta va por dentro."
+      }
     }
   }
 }

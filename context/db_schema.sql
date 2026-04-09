@@ -34,16 +34,18 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 CREATE TABLE IF NOT EXISTS orders (
-    id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    order_ref      VARCHAR(20)  NOT NULL UNIQUE,
-    product_id     INT UNSIGNED NOT NULL,
-    amount_cents   INT UNSIGNED NOT NULL,
-    currency       CHAR(3) DEFAULT 'EUR',
-    status         ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
-    customer_email VARCHAR(254),
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_ref       VARCHAR(20)  NOT NULL UNIQUE,
+    product_id      INT UNSIGNED NOT NULL,
+    amount_cents    INT UNSIGNED NOT NULL,
+    currency        CHAR(3) DEFAULT 'EUR',
+    status          ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
+    customer_name   VARCHAR(200) DEFAULT NULL,
+    customer_email  VARCHAR(254),
+    shipping_json   JSON,
     redsys_response JSON,
-    paid_at        DATETIME,
-    created_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    paid_at         DATETIME,
+    created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
 
@@ -53,5 +55,5 @@ CREATE TABLE IF NOT EXISTS sessions (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Datos semilla (opcional): las 5 variedades — slugs ejemplo; confirmar en RECON
+-- Datos iniciales (opcional): las 5 variedades — slugs ejemplo; confirmar en RECON
 -- INSERT INTO products (...) VALUES (...);

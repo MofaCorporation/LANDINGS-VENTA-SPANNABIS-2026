@@ -5,6 +5,7 @@
 *.log
 .DS_Store
 Thumbs.db
+/NUL
 
 # Archivos locales / backups
 *.zip

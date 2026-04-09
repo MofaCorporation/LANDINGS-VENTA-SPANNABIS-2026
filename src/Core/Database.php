@@ -14,7 +14,12 @@ final class Database
     public static function get(): PDO
     {
         if (self::$instance === null) {
-            $config = require dirname(__DIR__, 2) . '/config/database.php';
+            $root   = dirname(__DIR__, 2);
+            $configFile = $root . '/config/database.php';
+            if (!is_readable($configFile)) {
+                $configFile = $root . '/config/database.default.php';
+            }
+            $config = require $configFile;
             $dsn = "mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}";
 
             try {

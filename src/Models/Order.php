@@ -4,13 +4,170 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Core\Database;
+use PDO;
+
 final class Order
 {
+    /**
+     * `shipping_json` debe incluir el detalle multi-línea (`cart_lines`) cuando aplique.
+     *
+     * @return array{id: int, order_ref: string}
+     */
+    public static function createPending(
+        int $productId,
+        int $amountCents,
+        string $customerName,
+        string $customerEmail,
+        ?string $shippingJson = null,
+    ): array {
+        $pdo = Database::get();
+        $tempRef = 'TMP' . bin2hex(random_bytes(5));
+
+        $ins = $pdo->prepare(
+            'INSERT INTO orders (order_ref, product_id, amount_cents, currency, status, customer_name, customer_email, shipping_json)
+             VALUES (:ref, :pid, :amt, \'EUR\', \'pending\', :cname, :cemail, :sjson)',
+        );
+        $ins->execute([
+            'ref'    => $tempRef,
+            'pid'    => $productId,
+            'amt'    => $amountCents,
+            'cname'  => $customerName,
+            'cemail' => $customerEmail,
+            'sjson'  => $shippingJson,
+        ]);
+
+        $id = (int) $pdo->lastInsertId();
+        if ($id <= 0) {
+            throw new \RuntimeException('No se pudo crear el pedido.');
+        }
+
+        $orderRef = self::allocateUniqueOrderRef($pdo, $id);
+
+        $upd = $pdo->prepare('UPDATE orders SET order_ref = :oref WHERE id = :id AND order_ref = :old');
+        $upd->execute(['oref' => $orderRef, 'id' => $id, 'old' => $tempRef]);
+
+        return ['id' => $id, 'order_ref' => $orderRef];
+    }
+
+    /**
+     * Referencia Redsys: 4–12 caracteres, solo alfanuméricos, única por fila y por intento (sufijo aleatorio).
+     * Evita SIS0051 al recargar la pasarela: cada pedido nuevo obtiene un order_ref distinto del anterior.
+     */
+    private static function allocateUniqueOrderRef(PDO $pdo, int $id): string
+    {
+        for ($attempt = 0; $attempt < 50; $attempt++) {
+            $candidate = self::buildOrderRefCandidate($id);
+            $st        = $pdo->prepare('SELECT 1 FROM orders WHERE order_ref = :r LIMIT 1');
+            $st->execute(['r' => $candidate]);
+            if ($st->fetchColumn() === false) {
+                return $candidate;
+            }
+        }
+
+        throw new \RuntimeException('No se pudo generar order_ref único.');
+    }
+
+    /** Redsys: mín. 4, máx. 12, [A-Za-z0-9] */
+    private static function buildOrderRefCandidate(int $id): string
+    {
+        $idStr = (string) $id;
+        if (strlen($idStr) > 8) {
+            $idStr = substr($idStr, -8);
+        }
+        if (strlen($idStr) < 4) {
+            $idStr = str_pad($idStr, 4, '0', STR_PAD_LEFT);
+        }
+
+        $suffix = strtoupper(substr(bin2hex(random_bytes(3)), 0, 4));
+
+        $ref = $idStr . $suffix;
+        if (strlen($ref) > 12) {
+            $ref = substr($idStr, -8) . $suffix;
+        }
+
+        $ref = preg_replace('/[^0-9A-Za-z]/', '', $ref) ?? '';
+        if ($ref === '') {
+            $ref = strtoupper(substr(bin2hex(random_bytes(6)), 0, 12));
+        }
+        if (strlen($ref) < 4) {
+            $ref = str_pad($ref, 4, '0', STR_PAD_LEFT);
+        }
+        if (strlen($ref) > 12) {
+            $ref = substr($ref, 0, 12);
+        }
+
+        return $ref;
+    }
+
+    /** @param array<string, mixed> $params */
     public static function markAsPaid(string $orderRef, array $params): void
     {
+        $pdo = Database::get();
+        $pdo->beginTransaction();
+        try {
+            $st = $pdo->prepare('SELECT id, status FROM orders WHERE order_ref = :r FOR UPDATE');
+            $st->execute(['r' => $orderRef]);
+            $row = $st->fetch(PDO::FETCH_ASSOC);
+            if ($row === false) {
+                $pdo->rollBack();
+
+                return;
+            }
+
+            if ($row['status'] === 'paid') {
+                $pdo->commit();
+
+                return;
+            }
+
+            $json = json_encode(
+                $params,
+                JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE,
+            );
+            $up = $pdo->prepare(
+                'UPDATE orders SET status = \'paid\', redsys_response = :resp, paid_at = NOW() WHERE id = :id',
+            );
+            $up->execute(['resp' => $json, 'id' => (int) $row['id']]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     public static function markAsFailed(string $orderRef, int $code): void
     {
+        $pdo = Database::get();
+        $pdo->beginTransaction();
+        try {
+            $st = $pdo->prepare('SELECT id, status FROM orders WHERE order_ref = :r FOR UPDATE');
+            $st->execute(['r' => $orderRef]);
+            $row = $st->fetch(PDO::FETCH_ASSOC);
+            if ($row === false) {
+                $pdo->rollBack();
+
+                return;
+            }
+
+            if ($row['status'] === 'paid') {
+                $pdo->commit();
+
+                return;
+            }
+
+            $payload = json_encode(
+                ['Ds_Response' => $code, 'failed_at' => gmdate('c')],
+                JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE,
+            );
+            $up = $pdo->prepare(
+                'UPDATE orders SET status = \'failed\', redsys_response = :resp WHERE id = :id',
+            );
+            $up->execute(['resp' => $payload, 'id' => (int) $row['id']]);
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 }

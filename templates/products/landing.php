@@ -15,15 +15,15 @@ use App\Lang\Lang;
  *   paragraphCount: int,
  *   listCount: int,
  *   charCount: int,
- *   symptoms: list<array{icon: string, border: 'pc'|'sec'|'ter'|'white'}>,
- *   dareSub?: bool
+ *   symptoms: list<array{icon: string, border: 'pc'|'sec'|'ter'|'white'}>
  * } $landing
  */
 $L           = $landing;
 $prefix      = $L['prefix'];
-$buyImg      = Lang::current() === 'es' ? $L['buyEs'] : $L['buyEn'];
+$buyImg      = asset_url(Lang::current() === 'es' ? $L['buyEs'] : $L['buyEn']);
 $checkoutUrl = url_lang('/checkout') . '?variety=' . rawurlencode($L['variety']);
-$logo        = '/assets/img/ui/logo-tarumbas-farm.png';
+$logo        = asset_url('/assets/img/ui/logo-tarumbas-farm.png');
+$heroUrl     = asset_url($L['hero']);
 
 $borderStyle = static function (string $b): string {
     $c = $b === 'white' ? '#ffffff' : 'var(--' . $b . ')';
@@ -37,7 +37,7 @@ $iconColor = static function (string $b): string {
 ?>
 <header class="relative flex min-h-screen flex-col justify-center items-start overflow-x-hidden bg-[var(--bg)] px-6 pb-12 pt-10 text-white md:pb-14 md:pt-12">
 <div class="absolute inset-0 z-0 opacity-40 mix-blend-screen pointer-events-none">
-<img class="w-full h-full object-cover" alt="" src="<?= htmlspecialchars($L['hero'], ENT_QUOTES, 'UTF-8') ?>" width="1200" height="800" fetchpriority="high">
+<img class="w-full h-full object-cover" alt="" src="<?= htmlspecialchars($heroUrl, ENT_QUOTES, 'UTF-8') ?>" width="1200" height="800" fetchpriority="high">
 </div>
 <div class="relative z-10 max-w-4xl">
 <h1 class="tf-title-bangers text-7xl md:text-9xl leading-[0.85] uppercase mb-4 text-[var(--pc)]"><?= htmlspecialchars($L['h1'][0], ENT_QUOTES, 'UTF-8') ?><br><?= htmlspecialchars($L['h1'][1], ENT_QUOTES, 'UTF-8') ?></h1>
@@ -69,7 +69,7 @@ $iconColor = static function (string $b): string {
 </div>
 <div class="flex w-full flex-col gap-6 md:mt-24 md:w-1/2">
 <div class="relative shrink-0">
-<img class="w-full grayscale brightness-150 contrast-125 border-8 border-black sticker-shadow" alt="" src="<?= htmlspecialchars($L['hero'], ENT_QUOTES, 'UTF-8') ?>" width="900" height="900" loading="lazy">
+<img class="w-full grayscale brightness-150 contrast-125 border-8 border-black sticker-shadow" alt="" src="<?= htmlspecialchars($heroUrl, ENT_QUOTES, 'UTF-8') ?>" width="900" height="900" loading="lazy">
 <div class="absolute inset-0 bg-[var(--pc)]/20 mix-blend-multiply pointer-events-none"></div>
 </div>
 <aside class="tf-panel-sticker w-full bg-[var(--surf-cont)] p-6 md:p-8" aria-label="<?= Lang::t($prefix . '.chars_aria') ?>">
@@ -132,10 +132,14 @@ $iconColor = static function (string $b): string {
 
 <section class="flex flex-col items-center justify-center bg-black px-6 pb-20 pt-10 text-white md:pb-24 md:pt-12">
 <div class="max-w-4xl text-center">
-<?php $dareSub = !empty($L['dareSub']); ?>
-<h2 class="tf-title-bangers <?= $dareSub ? 'mb-4 md:mb-5' : 'mb-8 md:mb-10' ?> text-6xl uppercase text-white md:text-9xl"><?= Lang::t('product.common.dare_heading') ?></h2>
-<?php if ($dareSub) : ?>
-<p class="mx-auto mb-8 max-w-lg font-[family-name:var(--font-body)] text-lg leading-snug text-[#f0f0f0] md:mb-10 md:text-xl"><?= Lang::t($prefix . '.dare_sub') ?></p>
+<?php
+$dareKey     = $prefix . '.dare.text';
+$dareRaw     = Lang::raw($dareKey);
+$hasDareText = $dareRaw !== $dareKey && $dareRaw !== '';
+?>
+<h2 class="tf-title-bangers <?= $hasDareText ? 'mb-4 md:mb-5' : 'mb-8 md:mb-10' ?> text-6xl uppercase text-white md:text-9xl"><?= Lang::t('product.common.dare_heading') ?></h2>
+<?php if ($hasDareText) : ?>
+<p class="mx-auto mb-8 max-w-lg font-[family-name:var(--font-body)] text-lg leading-snug text-[#f0f0f0] md:mb-10 md:text-xl"><?= Lang::t($dareKey) ?></p>
 <?php endif; ?>
 
 <div class="mx-auto mt-2 max-w-full pt-2 md:mt-4 md:pt-4">

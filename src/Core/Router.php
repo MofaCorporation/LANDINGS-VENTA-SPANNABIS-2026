@@ -39,7 +39,7 @@ final class Router
             $lang       = $segments[0];
             $routeParts = array_slice($segments, 1);
         } elseif ($segments !== []) {
-            header('Location: /es/' . implode('/', $segments), true, 302);
+            header('Location: ' . base_path() . '/es/' . implode('/', $segments), true, 302);
             exit;
         }
 

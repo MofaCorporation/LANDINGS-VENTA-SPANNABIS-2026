@@ -10,8 +10,8 @@ use App\Lang\Lang;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 · <?= Lang::t('site.default_title') ?></title>
-    <link rel="stylesheet" href="/assets/css/mount-DElUb8cY.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(asset_url('/assets/css/mount-DElUb8cY.css'), ENT_QUOTES, 'UTF-8') ?>">
+    <link rel="stylesheet" href="<?= htmlspecialchars(asset_url('/assets/css/main.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 <body class="bg-black text-white min-h-screen flex items-center justify-center px-6">
     <div class="text-center max-w-md">

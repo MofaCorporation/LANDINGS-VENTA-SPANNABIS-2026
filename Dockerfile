@@ -9,4 +9,7 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf \
     && sed -ri "/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/" /etc/apache2/apache2.conf
 
+COPY docker/apache/drops-alias.conf /etc/apache2/conf-available/drops-alias.conf
+RUN a2enconf drops-alias
+
 WORKDIR /var/www/html

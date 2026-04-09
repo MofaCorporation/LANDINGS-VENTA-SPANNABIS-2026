@@ -2,19 +2,19 @@
   "meta": {
     "holy_boss": {
       "document_title": "HOLY BOSS · Tarumba's Farm",
-      "description": "Holy Boss — Dominant sativa, intense. Collector seeds at Tarumba's Farm."
+      "description": "Holy Boss — Dominant sativa, intense. Collectibles at Tarumba's Farm."
     },
     "lady_cupcake": {
       "document_title": "LADY CUPCAKE · Tarumba's Farm",
-      "description": "Lady Cupcake — Sweet balanced hybrid. Collector seeds at Tarumba's Farm."
+      "description": "Lady Cupcake — Sweet balanced hybrid. Collectibles at Tarumba's Farm."
     },
     "nitro_bud": {
       "document_title": "NITRO BUD · Tarumba's Farm",
-      "description": "Nitro Bud — Fast easy autoflower. Collector seeds at Tarumba's Farm."
+      "description": "Nitro Bud — Fast easy autoflower. Collectibles at Tarumba's Farm."
     },
     "toxic_mutant": {
       "document_title": "TOXIC MUTANT · Tarumba's Farm",
-      "description": "Toxic Mutant — Dense resinous indica genetics. Collector seeds at Tarumba's Farm."
+      "description": "Toxic Mutant — Dense resinous indica genetics. Collectibles at Tarumba's Farm."
     }
   },
   "product": {
@@ -56,7 +56,9 @@
       "crit2": "Not chosen for looks",
       "crit3": "Chosen for mental height and demand",
       "made_for": "Experienced users · Intense creativity · Active moments · Focus · Not for relaxing",
-      "dare_sub": "Not everyone can wear the crown.",
+      "dare": {
+        "text": "Not everyone can wear the crown."
+      },
       "chars_aria": "Characteristics",
       "made_for_aria": "MADE FOR:"
     },
@@ -91,6 +93,9 @@
       "crit2": "Not chosen for looks",
       "crit3": "Chosen for enjoyment, balance, and resin presence",
       "made_for": "Come down without disappearing · After work · Quiet enjoyment · Gentle social use · Relax without checking out",
+      "dare": {
+        "text": "It won't floor you. It wraps around you."
+      },
       "chars_aria": "Characteristics",
       "made_for_aria": "MADE FOR:"
     },
@@ -131,6 +136,9 @@
       "crit2": "Not chosen for show",
       "crit3": "Chosen for speed, simplicity, and results",
       "made_for": "Daily use · Novice growers · Small spaces · Fast grows · Use without getting KO'd",
+      "dare": {
+        "text": "Gets straight to the point."
+      },
       "chars_aria": "Characteristics",
       "made_for_aria": "MADE FOR:"
     },
@@ -168,8 +176,16 @@
       "crit2": "Not chosen for looks",
       "crit3": "Chosen for hit, resin, and presence",
       "made_for": "End of day · Total relaxation · Shut off mental noise · Deep rest",
+      "dare": {
+        "text": "It sinks you in slow."
+      },
       "chars_aria": "Characteristics",
       "made_for_aria": "MADE FOR:"
+    },
+    "dj_piggy": {
+      "dare": {
+        "text": "The party happens on the inside."
+      }
     }
   }
 }

@@ -4,11 +4,657 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Lang\Lang;
+use App\Models\Order;
+use App\Services\CheckoutCatalog;
+use App\Services\RedsysService;
+
 final class CheckoutController extends BaseController
 {
+    private const SHIP_STANDARD_CENTS   = 590;
+    private const FREE_SHIPPING_SUBTOTAL_CENTS = 5000;
+
+    private const SESSION_CART = 'cart';
+
+    private const SESSION_FORM_OLD = 'checkout_form_old';
+
+    private const SESSION_FIELD_ERRORS = 'checkout_field_errors';
+
+    /** @return list<int> */
+    private static function allowedPacks(): array
+    {
+        return [1, 3, 5, 10];
+    }
+
     public function index(): void
     {
-        http_response_code(501);
-        echo 'Checkout — pendiente de implementación.';
+        $variety = isset($_GET['variety']) && is_string($_GET['variety']) ? trim($_GET['variety']) : '';
+        if ($variety !== '' && !preg_match('/^[a-z0-9-]{1,64}$/', $variety)) {
+            $variety = '';
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->handlePost();
+
+            return;
+        }
+
+        $this->handleGet($variety);
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function cartSession(): array
+    {
+        $c = $_SESSION[self::SESSION_CART] ?? null;
+        if (!is_array($c)) {
+            return [];
+        }
+
+        return array_values(array_filter($c, static fn ($row): bool => is_array($row)));
+    }
+
+    /** @param list<array<string, mixed>> $lines */
+    private function saveCartSession(array $lines): void
+    {
+        $_SESSION[self::SESSION_CART] = $lines;
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function sanitizeCartLines(array $lines): array
+    {
+        $out = [];
+        foreach ($lines as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $v = isset($row['variety']) && is_string($row['variety']) ? $row['variety'] : '';
+            $pack = isset($row['pack']) ? (int) $row['pack'] : 0;
+            $qty  = isset($row['quantity']) ? (int) $row['quantity'] : 1;
+            if ($v === '' || !in_array($pack, self::allowedPacks(), true)) {
+                continue;
+            }
+            if ($qty < 1) {
+                $qty = 1;
+            }
+            if ($qty > 99) {
+                $qty = 99;
+            }
+            $resolved = CheckoutCatalog::resolve($v);
+            if ($resolved === null) {
+                continue;
+            }
+            $unit = (int) $resolved['price_cents'];
+            $sub  = $unit * $pack * $qty;
+            $out[] = [
+                'variety'      => $v,
+                'pack'         => $pack,
+                'quantity'     => $qty,
+                'price_cents'  => $unit,
+                'subtotal'     => $sub,
+                'product_id'   => (int) $resolved['product_id'],
+                'title_lang_key' => (string) $resolved['title_lang_key'],
+            ];
+        }
+
+        return $out;
+    }
+
+    private function redirectToCheckout(string $variety): void
+    {
+        $q = $variety !== '' ? '?variety=' . rawurlencode($variety) : '';
+        header('Location: ' . url_lang('/checkout') . $q, true, 303);
+        exit;
+    }
+
+    private function handleGet(string $varietyParam): void
+    {
+        $this->saveCartSession($this->sanitizeCartLines($this->cartSession()));
+
+        $slugs = CheckoutCatalog::varietySlugs();
+        if ($slugs === []) {
+            $this->notFoundPage();
+
+            return;
+        }
+
+        $variety = $varietyParam;
+        if ($variety === '' || !in_array($variety, $slugs, true)) {
+            $sess = $_SESSION['checkout_variety'] ?? null;
+            $variety = is_string($sess) && in_array($sess, $slugs, true) ? $sess : $slugs[0];
+        }
+
+        $line = CheckoutCatalog::resolve($variety);
+        if ($line === null) {
+            $variety = $slugs[0];
+            $line    = CheckoutCatalog::resolve($variety);
+            if ($line === null) {
+                $this->notFoundPage();
+
+                return;
+            }
+        }
+
+        $_SESSION['checkout_variety'] = $variety;
+        checkout_csrf_token();
+
+        $err = $_SESSION['checkout_flash_error'] ?? null;
+        unset($_SESSION['checkout_flash_error']);
+
+        $checkoutOld = [];
+        $oldRaw = $_SESSION[self::SESSION_FORM_OLD] ?? null;
+        if (is_array($oldRaw)) {
+            $checkoutOld = $oldRaw;
+            unset($_SESSION[self::SESSION_FORM_OLD]);
+        }
+
+        $checkoutFieldErrors = [];
+        $fer = $_SESSION[self::SESSION_FIELD_ERRORS] ?? null;
+        if (is_array($fer)) {
+            $checkoutFieldErrors = $fer;
+            unset($_SESSION[self::SESSION_FIELD_ERRORS]);
+        }
+
+        if (($err === null || $err === '') && $checkoutFieldErrors !== []) {
+            $err = Lang::t('checkout.error_validation_summary');
+        }
+
+        $all   = CheckoutCatalog::allResolved();
+        $chips = array_values(array_filter($all, static fn (array $r): bool => $r['variety'] !== $variety));
+
+        $cartLines = $this->cartSession();
+        $cartView  = $this->buildCartView($cartLines);
+
+        $catalogForJs = [];
+        foreach ($all as $r) {
+            $catalogForJs[] = [
+                'variety'          => $r['variety'],
+                'unitCents'        => (int) $r['price_cents'],
+                'hero'             => asset_url((string) $r['hero']),
+                'title'            => Lang::raw((string) $r['title_lang_key']),
+                'tagline'          => Lang::raw((string) $r['tagline_lang_key']),
+                'titleLangKey'     => (string) $r['title_lang_key'],
+                'taglineLangKey'   => (string) $r['tagline_lang_key'],
+            ];
+        }
+
+        $this->render('checkout', [
+            'pageTitleKey'         => 'checkout.page_title',
+            'metaDescriptionKey'   => 'checkout.meta_description',
+            'checkoutUi'             => true,
+            'extraModuleSrc'         => null,
+            'checkoutLine'           => $line,
+            'variety'                => $variety,
+            'varietyOptions'         => $all,
+            'varietyChips'           => $chips,
+            'formError'              => is_string($err) ? $err : null,
+            'redsysPayment'          => null,
+            'redsysUrl'              => null,
+            'shipStandardCents'      => self::SHIP_STANDARD_CENTS,
+            'freeShippingSubtotal'   => self::FREE_SHIPPING_SUBTOTAL_CENTS,
+            'cartLines'              => $cartLines,
+            'cartView'               => $cartView,
+            'catalogJson'            => json_encode(
+                $catalogForJs,
+                JSON_THROW_ON_ERROR
+                | JSON_INVALID_UTF8_SUBSTITUTE
+                | JSON_UNESCAPED_UNICODE
+                | JSON_HEX_TAG
+                | JSON_HEX_AMP
+                | JSON_HEX_APOS,
+            ),
+            'checkoutOld'            => $checkoutOld,
+            'checkoutFieldErrors'    => $checkoutFieldErrors,
+            'payValidateMsgsJson'    => $this->buildPayValidateMsgsJson(),
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function readCheckoutFormFromPost(): array
+    {
+        $s = static function (string $key): string {
+            return isset($_POST[$key]) && is_string($_POST[$key]) ? trim($_POST[$key]) : '';
+        };
+
+        return [
+            'email'          => mb_substr($s('email'), 0, 254),
+            'name'           => mb_substr($s('name'), 0, 200),
+            'address'        => mb_substr($s('address'), 0, 500),
+            'postal'         => mb_substr($s('postal'), 0, 32),
+            'city'           => mb_substr($s('city'), 0, 120),
+            'province'       => mb_substr($s('province'), 0, 120),
+            'country'        => mb_substr($s('country'), 0, 120),
+            'phone'          => mb_substr($s('phone'), 0, 40),
+            'shipping'       => isset($_POST['shipping']) && $_POST['shipping'] === 'pickup' ? 'pickup' : 'standard',
+            'payment'        => isset($_POST['payment']) && $_POST['payment'] === 'transfer' ? 'transfer' : 'card',
+            'guest'          => isset($_POST['guest']),
+            'create_account' => isset($_POST['create_account']),
+        ];
+    }
+
+    private function resolveVarietyUrlForRedirect(string $postedV): string
+    {
+        $slugs = CheckoutCatalog::varietySlugs();
+        if ($postedV !== '' && in_array($postedV, $slugs, true)) {
+            return $postedV;
+        }
+        $sess = $_SESSION['checkout_variety'] ?? null;
+        if (is_string($sess) && in_array($sess, $slugs, true)) {
+            return $sess;
+        }
+
+        return $slugs[0] ?? 'dj-piggy';
+    }
+
+    /**
+     * @param array<string, string> $fieldLangKeys
+     */
+    private function flashCheckoutValidation(array $old, array $fieldLangKeys, string $varietyUrl, ?string $bannerEscaped): void
+    {
+        $_SESSION[self::SESSION_FORM_OLD]      = $old;
+        $_SESSION[self::SESSION_FIELD_ERRORS] = $fieldLangKeys;
+        if ($bannerEscaped !== null && $bannerEscaped !== '') {
+            $_SESSION['checkout_flash_error'] = $bannerEscaped;
+        }
+        header('Location: ' . url_lang('/checkout') . '?variety=' . rawurlencode($varietyUrl), true, 303);
+        exit;
+    }
+
+    /**
+     * @param array<string, mixed> $o
+     *
+     * @return array<string, string> map field id key => i18n key
+     */
+    private function validateCheckoutPayFields(array $o): array
+    {
+        $e = [];
+        if ($o['email'] === '') {
+            $e['email'] = 'checkout.field_required_email';
+        } elseif (!filter_var((string) $o['email'], FILTER_VALIDATE_EMAIL)) {
+            $e['email'] = 'checkout.field_invalid_email';
+        }
+
+        $nameLen = mb_strlen((string) $o['name']);
+        if ($nameLen < 2) {
+            $e['name'] = 'checkout.field_required_name';
+        } elseif ($nameLen > 200) {
+            $e['name'] = 'checkout.field_error_name_len';
+        }
+
+        $addr = (string) $o['address'];
+        if ($addr === '') {
+            $e['address'] = 'checkout.field_required_address';
+        } elseif (mb_strlen($addr) > 500) {
+            $e['address'] = 'checkout.field_error_address_len';
+        }
+
+        $postal = (string) $o['postal'];
+        if ($postal === '') {
+            $e['postal'] = 'checkout.field_required_postal';
+        } elseif (mb_strlen($postal) > 32) {
+            $e['postal'] = 'checkout.field_error_postal_len';
+        }
+
+        if ((string) $o['city'] === '') {
+            $e['city'] = 'checkout.field_required_city';
+        } elseif (mb_strlen((string) $o['city']) > 120) {
+            $e['city'] = 'checkout.field_error_city_len';
+        }
+
+        if ((string) $o['province'] === '') {
+            $e['province'] = 'checkout.field_required_province';
+        } elseif (mb_strlen((string) $o['province']) > 120) {
+            $e['province'] = 'checkout.field_error_province_len';
+        }
+
+        if ((string) $o['country'] === '') {
+            $e['country'] = 'checkout.field_required_country';
+        } elseif (mb_strlen((string) $o['country']) > 120) {
+            $e['country'] = 'checkout.field_error_country_len';
+        }
+
+        if (mb_strlen((string) $o['phone']) > 40) {
+            $e['phone'] = 'checkout.field_error_phone_len';
+        }
+
+        return $e;
+    }
+
+    private function buildPayValidateMsgsJson(): string
+    {
+        $m = [
+            'cartEmpty'         => Lang::raw('checkout.field_error_cart_empty'),
+            'emailRequired'     => Lang::raw('checkout.field_required_email'),
+            'emailInvalid'      => Lang::raw('checkout.field_invalid_email'),
+            'nameRequired'      => Lang::raw('checkout.field_required_name'),
+            'addressRequired'   => Lang::raw('checkout.field_required_address'),
+            'postalRequired'    => Lang::raw('checkout.field_required_postal'),
+            'cityRequired'      => Lang::raw('checkout.field_required_city'),
+            'provinceRequired'  => Lang::raw('checkout.field_required_province'),
+            'countryRequired'   => Lang::raw('checkout.field_required_country'),
+            'phoneTooLong'      => Lang::raw('checkout.field_error_phone_len'),
+            'paymentCard'       => Lang::raw('checkout.field_error_payment_card'),
+        ];
+
+        return json_encode(
+            $m,
+            JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS,
+        );
+    }
+
+    /**
+     * @param list<array<string, mixed>> $cartLines
+     *
+     * @return list<array{variety: string, pack: int, quantity: int, subtotal_cents: int, title: string, pack_label: string}>
+     */
+    private function buildCartView(array $cartLines): array
+    {
+        $out = [];
+        foreach ($cartLines as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $pack = (int) ($row['pack'] ?? 0);
+            $pk   = 'checkout.pack_' . $pack;
+            $out[] = [
+                'variety'         => (string) ($row['variety'] ?? ''),
+                'pack'            => $pack,
+                'quantity'        => (int) ($row['quantity'] ?? 1),
+                'subtotal_cents'  => (int) ($row['subtotal'] ?? 0),
+                'title'           => Lang::t((string) ($row['title_lang_key'] ?? 'checkout.label_variety')),
+                'pack_label'      => Lang::t($pk),
+            ];
+        }
+
+        return $out;
+    }
+
+    private function handlePost(): void
+    {
+        if (!checkout_verify_csrf((string) ($_POST['csrf'] ?? ''))) {
+            $_SESSION['checkout_flash_error'] = Lang::t('checkout.error_csrf');
+            $this->redirectBackToCheckout();
+            exit;
+        }
+
+        $action = isset($_POST['cart_action']) && is_string($_POST['cart_action']) ? trim($_POST['cart_action']) : '';
+        if ($action === 'add') {
+            $this->postCartAdd();
+            exit;
+        }
+        if ($action === 'remove') {
+            $this->postCartRemove();
+            exit;
+        }
+
+        $this->postCheckoutPay();
+    }
+
+    private function postCartAdd(): void
+    {
+        $postedV = isset($_POST['variety']) && is_string($_POST['variety']) ? trim($_POST['variety']) : '';
+        if (!in_array($postedV, CheckoutCatalog::varietySlugs(), true)) {
+            $_SESSION['checkout_flash_error'] = Lang::t('checkout.error_session');
+            $this->redirectBackToCheckout();
+            exit;
+        }
+
+        $pack = isset($_POST['pack']) ? (int) $_POST['pack'] : 1;
+        if (!in_array($pack, self::allowedPacks(), true)) {
+            $pack = 1;
+        }
+
+        $resolved = CheckoutCatalog::resolve($postedV);
+        if ($resolved === null) {
+            $_SESSION['checkout_flash_error'] = Lang::t('checkout.error_session');
+            $this->redirectBackToCheckout();
+            exit;
+        }
+
+        $unit = (int) $resolved['price_cents'];
+        $qty  = isset($_POST['quantity']) ? (int) $_POST['quantity'] : 1;
+        if ($qty < 1) {
+            $qty = 1;
+        }
+        if ($qty > 99) {
+            $qty = 99;
+        }
+
+        $line = [
+            'variety'          => $postedV,
+            'pack'             => $pack,
+            'quantity'         => $qty,
+            'price_cents'      => $unit,
+            'subtotal'         => $unit * $pack * $qty,
+            'product_id'       => (int) $resolved['product_id'],
+            'title_lang_key'   => (string) $resolved['title_lang_key'],
+        ];
+
+        $cart   = $this->cartSession();
+        $cart[] = $line;
+        $this->saveCartSession($this->sanitizeCartLines($cart));
+        $_SESSION['checkout_variety'] = $postedV;
+
+        $this->redirectToCheckout($postedV);
+    }
+
+    private function postCartRemove(): void
+    {
+        $idx = isset($_POST['line_index']) ? (int) $_POST['line_index'] : -1;
+        $cart = $this->cartSession();
+        if ($idx < 0 || $idx >= count($cart)) {
+            $v = isset($_SESSION['checkout_variety']) && is_string($_SESSION['checkout_variety']) ? $_SESSION['checkout_variety'] : '';
+            $this->redirectToCheckout($v);
+
+            return;
+        }
+
+        unset($cart[$idx]);
+        $this->saveCartSession(array_values($cart));
+
+        $v = isset($_SESSION['checkout_variety']) && is_string($_SESSION['checkout_variety']) ? $_SESSION['checkout_variety'] : '';
+        $this->redirectToCheckout($v);
+    }
+
+    private function postCheckoutPay(): void
+    {
+        $o = $this->readCheckoutFormFromPost();
+
+        $postedV = isset($_POST['variety']) && is_string($_POST['variety']) ? trim($_POST['variety']) : '';
+        $varietyUrl = $this->resolveVarietyUrlForRedirect($postedV);
+
+        $cart = $this->sanitizeCartLines($this->cartSession());
+        $this->saveCartSession($cart);
+
+        if ($cart === []) {
+            $this->flashCheckoutValidation(
+                $o,
+                ['cart' => 'checkout.field_error_cart_empty'],
+                $varietyUrl,
+                Lang::t('checkout.error_cart_empty'),
+            );
+        }
+
+        if ($postedV !== '' && in_array($postedV, CheckoutCatalog::varietySlugs(), true)) {
+            $_SESSION['checkout_variety'] = $postedV;
+        }
+
+        $variety = isset($_SESSION['checkout_variety']) && is_string($_SESSION['checkout_variety'])
+            ? $_SESSION['checkout_variety']
+            : (string) ($cart[0]['variety'] ?? '');
+
+        if ($o['payment'] !== 'card') {
+            $this->flashCheckoutValidation(
+                $o,
+                ['payment' => 'checkout.field_error_payment_card'],
+                $varietyUrl,
+                Lang::t('checkout.error_payment_card'),
+            );
+        }
+
+        $fieldErrs = $this->validateCheckoutPayFields($o);
+        if ($fieldErrs !== []) {
+            $this->flashCheckoutValidation($o, $fieldErrs, $varietyUrl, null);
+        }
+
+        $shipping = $o['shipping'] === 'pickup' ? 'pickup' : 'standard';
+        $email    = (string) $o['email'];
+        $name     = (string) $o['name'];
+        $address  = (string) $o['address'];
+        $postal   = (string) $o['postal'];
+        $city     = (string) $o['city'];
+        $province = (string) $o['province'];
+        $country  = (string) $o['country'];
+        $phone    = (string) $o['phone'];
+
+        $subtotal = 0;
+        foreach ($cart as $row) {
+            $subtotal += (int) ($row['subtotal'] ?? 0);
+        }
+
+        $shipCents = $shipping === 'pickup' ? 0 : self::SHIP_STANDARD_CENTS;
+        if ($subtotal >= self::FREE_SHIPPING_SUBTOTAL_CENTS) {
+            $shipCents = 0;
+        }
+        $totalCents = $subtotal + $shipCents;
+
+        $guest         = !empty($o['guest']);
+        $createAccount = !empty($o['create_account']);
+
+        $linesForDb = [];
+        foreach ($cart as $row) {
+            $linesForDb[] = [
+                'variety'     => (string) $row['variety'],
+                'pack'        => (int) $row['pack'],
+                'quantity'    => (int) $row['quantity'],
+                'price_cents' => (int) $row['price_cents'],
+                'subtotal'    => (int) $row['subtotal'],
+                'product_id'  => (int) $row['product_id'],
+            ];
+        }
+
+        $shippingPayload = [
+            'cart_lines'       => $linesForDb,
+            'shipping'         => $shipping,
+            'payment'          => $payment,
+            'email'            => $email,
+            'address_line'     => $address,
+            'postal'           => $postal,
+            'city'             => $city,
+            'province'         => $province,
+            'country'          => $country,
+            'phone'            => $phone,
+            'guest'            => $guest,
+            'create_account'   => $createAccount,
+            'subtotal_cents'   => $subtotal,
+            'shipping_cents'   => $shipCents,
+            'total_cents'      => $totalCents,
+        ];
+
+        $shippingJson = json_encode(
+            $shippingPayload,
+            JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE,
+        );
+
+        $primaryProductId = (int) $cart[0]['product_id'];
+
+        try {
+            $created = Order::createPending(
+                $primaryProductId,
+                $totalCents,
+                $name,
+                $email,
+                $shippingJson,
+            );
+        } catch (\Throwable) {
+            $this->flashCheckoutValidation($o, [], $varietyUrl, Lang::t('checkout.error_order'));
+        }
+
+        $base   = rtrim((string) (defined('BASE_URL') ? BASE_URL : base_url()), '/');
+        $lang   = Lang::current();
+        $redsys = new RedsysService(RedsysService::loadConfig());
+
+        $descParts = [];
+        foreach ($cart as $row) {
+            $r = CheckoutCatalog::resolve((string) $row['variety']);
+            if ($r !== null) {
+                $t = mb_substr(Lang::raw((string) $r['title_lang_key']), 0, 40);
+                $descParts[] = $t . '×' . (string) ((int) $row['pack'] * (int) $row['quantity']);
+            }
+        }
+        $desc = mb_substr(implode(', ', $descParts), 0, 120);
+        if ($desc === '') {
+            $desc = 'Tarumba order';
+        }
+
+        try {
+            $paymentParams = $redsys->buildPaymentParams([
+                'amount_cents'         => $totalCents,
+                'order_id'             => $created['order_ref'],
+                'lang'                 => $lang,
+                'notify_url'           => $base . '/redsys/notify',
+                'ok_url'               => $base . '/' . $lang . '/checkout/ok',
+                'ko_url'               => $base . '/' . $lang . '/checkout/ko',
+                'product_description'  => $desc,
+            ]);
+        } catch (\Throwable $e) {
+            error_log('Redsys buildPaymentParams: ' . $e->getMessage());
+            $this->flashCheckoutValidation($o, [], $varietyUrl, Lang::t('checkout.error_payment_init'));
+        }
+
+        unset($_SESSION['csrf_checkout']);
+        $this->saveCartSession([]);
+
+        $line = CheckoutCatalog::resolve($variety);
+        if ($line === null) {
+            $line = CheckoutCatalog::resolve((string) $cart[0]['variety']);
+        }
+        if ($line === null) {
+            $this->notFoundPage();
+
+            return;
+        }
+
+        $all   = CheckoutCatalog::allResolved();
+        $chips = array_values(array_filter($all, static fn (array $r): bool => $r['variety'] !== $line['variety']));
+
+        $this->render('checkout', [
+            'pageTitleKey'        => 'checkout.page_title_pay',
+            'metaDescriptionKey'  => 'checkout.meta_description',
+            'checkoutUi'          => true,
+            'extraModuleSrc'        => null,
+            'checkoutLine'        => $line,
+            'variety'               => (string) $line['variety'],
+            'varietyOptions'        => $all,
+            'varietyChips'          => $chips,
+            'formError'             => null,
+            'redsysPayment'         => $paymentParams,
+            'redsysUrl'             => $redsys->getEndpointUrl(),
+            'shipStandardCents'     => self::SHIP_STANDARD_CENTS,
+            'freeShippingSubtotal'  => self::FREE_SHIPPING_SUBTOTAL_CENTS,
+            'cartLines'             => [],
+            'cartView'              => [],
+            'catalogJson'           => '[]',
+            'checkoutOld'           => [],
+            'checkoutFieldErrors'   => [],
+            'payValidateMsgsJson'   => '{}',
+        ]);
+    }
+
+    private function redirectBackToCheckout(): void
+    {
+        $v = isset($_SESSION['checkout_variety']) && is_string($_SESSION['checkout_variety'])
+            ? $_SESSION['checkout_variety']
+            : '';
+        if ($v === '' && CheckoutCatalog::varietySlugs() !== []) {
+            $v = CheckoutCatalog::varietySlugs()[0];
+        }
+        header('Location: ' . url_lang('/checkout') . ($v !== '' ? '?variety=' . rawurlencode($v) : ''), true, 303);
+    }
+
+    private function notFoundPage(): void
+    {
+        http_response_code(404);
+        require dirname(__DIR__, 2) . '/templates/404.php';
+        exit;
     }
 }
