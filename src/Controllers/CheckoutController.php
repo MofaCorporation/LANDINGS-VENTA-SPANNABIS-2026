@@ -63,6 +63,63 @@ final class CheckoutController extends BaseController
         return $set;
     }
 
+    /**
+     * Códigos ISO excepto ES, ordenados A–Z por nombre en inglés (src/Lang/en.json).
+     * Mismo orden en checkout ES y EN.
+     *
+     * @return list<string>
+     */
+    private static function countryCodesOrderedByEnglishName(): array
+    {
+        $set = self::countryCodeSet();
+        $path = dirname(__DIR__) . '/Lang/en.json';
+        if (!is_readable($path)) {
+            $codes = array_keys($set);
+            sort($codes, SORT_STRING);
+
+            return array_values(array_filter($codes, static fn (string $c): bool => $c !== 'ES'));
+        }
+
+        try {
+            $raw = file_get_contents($path);
+            if ($raw === false) {
+                throw new \RuntimeException('unreadable');
+            }
+            /** @var array<string, mixed> $data */
+            $data = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+            $countries = $data['checkout']['countries'] ?? null;
+            if (!is_array($countries)) {
+                throw new \RuntimeException('bad shape');
+            }
+            $pairs = [];
+            foreach ($countries as $code => $name) {
+                if (!is_string($code) || !is_string($name)) {
+                    continue;
+                }
+                if ($code === 'ES') {
+                    continue;
+                }
+                if (!isset($set[$code])) {
+                    continue;
+                }
+                $pairs[] = ['code' => $code, 'name' => $name];
+            }
+            usort(
+                $pairs,
+                static function (array $a, array $b): int {
+                    return strcasecmp($a['name'], $b['name']);
+                },
+            );
+
+            return array_column($pairs, 'code');
+        } catch (\Throwable) {
+            $codes = array_keys($set);
+            sort($codes, SORT_STRING);
+
+            return array_values(array_filter($codes, static fn (string $c): bool => $c !== 'ES'));
+        }
+    }
+
     private static function normSpaces(string $s): string
     {
         $s = trim($s);
@@ -377,6 +434,7 @@ final class CheckoutController extends BaseController
             'checkoutFieldErrors'    => $checkoutFieldErrors,
             'payValidateMsgsJson'    => $this->buildPayValidateMsgsJson(),
             'countryCodeSet'         => self::countryCodeSet(),
+            'countryCodesOrdered'    => self::countryCodesOrderedByEnglishName(),
         ]);
     }
 
@@ -979,6 +1037,8 @@ final class CheckoutController extends BaseController
             'checkoutOld'           => [],
             'checkoutFieldErrors'   => [],
             'payValidateMsgsJson'   => '{}',
+            'countryCodeSet'        => self::countryCodeSet(),
+            'countryCodesOrdered'   => self::countryCodesOrderedByEnglishName(),
         ]);
     }
 

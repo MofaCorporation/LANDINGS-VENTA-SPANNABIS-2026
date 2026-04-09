@@ -19,6 +19,7 @@ use App\Lang\Lang;
 /** @var array<string, string> $checkoutFieldErrors */
 /** @var string $payValidateMsgsJson */
 /** @var array<string, true> $countryCodeSet */
+/** @var list<string> $countryCodesOrdered */
 
 $line            = $checkoutLine ?? [];
 $formError       = $formError ?? null;
@@ -34,6 +35,7 @@ $checkoutOld     = $checkoutOld ?? [];
 $checkoutFieldErrors = $checkoutFieldErrors ?? [];
 $payValidateMsgsJson = $payValidateMsgsJson ?? '{}';
 $countryCodeSet = $countryCodeSet ?? [];
+$countryCodesOrdered = $countryCodesOrdered ?? [];
 
 $cartSubtotalCents = 0;
 foreach ($cartLines as $cl) {
@@ -233,9 +235,12 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
               <select id="checkout-field-country" name="country" class="field-select" autocomplete="country" required>
                 <?php
                 $countryOld = strtoupper((string) ($checkoutOld['country'] ?? ''));
-                $countryCodes = array_keys($countryCodeSet);
-                sort($countryCodes, SORT_STRING);
-                $countryCodes = array_values(array_filter($countryCodes, static fn (string $c): bool => $c !== 'ES'));
+                $countryCodes = $countryCodesOrdered;
+                if ($countryCodes === []) {
+                    $countryCodes = array_keys($countryCodeSet);
+                    sort($countryCodes, SORT_STRING);
+                    $countryCodes = array_values(array_filter($countryCodes, static fn (string $c): bool => $c !== 'ES'));
+                }
                 ?>
                 <option value=""><?= Lang::t('checkout.country_select_placeholder') ?></option>
                 <option value="ES"<?= $countryOld === 'ES' ? ' selected' : '' ?>><?= Lang::t('checkout.countries.ES') ?></option>
