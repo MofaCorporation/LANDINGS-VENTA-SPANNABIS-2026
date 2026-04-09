@@ -17,7 +17,7 @@ $hrefEn      = htmlspecialchars(base_url() . Lang::switchUrl($requestUri, 'en'),
 $hrefSelf    = htmlspecialchars(base_url() . $path, ENT_QUOTES, 'UTF-8');
 $langCurrent = Lang::current();
 $langSwitchHref = htmlspecialchars(base_path() . Lang::switchUrl($requestUri, $langCurrent === 'es' ? 'en' : 'es'), ENT_QUOTES, 'UTF-8');
-$langSwitchLabel = Lang::t('nav.lang_switch');
+$langSwitchLabel = $langCurrent === 'es' ? '🇬🇧 ENGLISH' : '🇪🇸 ESPAÑOL';
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($langCurrent, ENT_QUOTES, 'UTF-8') ?>"<?= !$checkoutUi && $htmlThemeStyle !== '' ? ' class="dark" style="' . htmlspecialchars($htmlThemeStyle, ENT_QUOTES, 'UTF-8') . '"' : (!$checkoutUi ? ' class="dark"' : '') ?>>
@@ -55,6 +55,6 @@ $langSwitchLabel = Lang::t('nav.lang_switch');
 <?php if (!$checkoutUi) : ?>
 <div id="root">
 <div class="tf-lang-switch" style="position:fixed;top:1rem;right:1rem;left:auto;z-index:50;">
-    <a href="<?= $langSwitchHref ?>" class="tf-lang-switch__btn tf-title-bangers"><?= $langSwitchLabel ?></a>
+    <a href="<?= $langSwitchHref ?>" class="tf-lang-switch__btn tf-title-bangers"><?= htmlspecialchars($langSwitchLabel, ENT_QUOTES, 'UTF-8') ?></a>
 </div>
 <?php endif; ?>
