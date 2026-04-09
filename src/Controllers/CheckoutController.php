@@ -20,6 +20,166 @@ final class CheckoutController extends BaseController
 
     private const SESSION_FIELD_ERRORS = 'checkout_field_errors';
 
+    /** @return array<string, true> */
+    private static function countryCodeSet(): array
+    {
+        // ISO 3166-1 alpha-2 (incluye territorios) — labels via i18n: checkout.countries.<CODE>
+        $codes = [
+            'AD','AE','AF','AG','AI','AL','AM','AO','AQ','AR','AS','AT','AU','AW','AX','AZ',
+            'BA','BB','BD','BE','BF','BG','BH','BI','BJ','BL','BM','BN','BO','BQ','BR','BS','BT','BV','BW','BY','BZ',
+            'CA','CC','CD','CF','CG','CH','CI','CK','CL','CM','CN','CO','CR','CU','CV','CW','CX','CY','CZ',
+            'DE','DJ','DK','DM','DO','DZ',
+            'EC','EE','EG','EH','ER','ES','ET',
+            'FI','FJ','FK','FM','FO','FR',
+            'GA','GB','GD','GE','GF','GG','GH','GI','GL','GM','GN','GP','GQ','GR','GS','GT','GU','GW','GY',
+            'HK','HM','HN','HR','HT','HU',
+            'ID','IE','IL','IM','IN','IO','IQ','IR','IS','IT',
+            'JE','JM','JO','JP',
+            'KE','KG','KH','KI','KM','KN','KP','KR','KW','KY','KZ',
+            'LA','LB','LC','LI','LK','LR','LS','LT','LU','LV','LY',
+            'MA','MC','MD','ME','MF','MG','MH','MK','ML','MM','MN','MO','MP','MQ','MR','MS','MT','MU','MV','MW','MX','MY','MZ',
+            'NA','NC','NE','NF','NG','NI','NL','NO','NP','NR','NU','NZ',
+            'OM',
+            'PA','PE','PF','PG','PH','PK','PL','PM','PN','PR','PS','PT','PW','PY',
+            'QA',
+            'RE','RO','RS','RU','RW',
+            'SA','SB','SC','SD','SE','SG','SH','SI','SJ','SK','SL','SM','SN','SO','SR','SS','ST','SV','SX','SY','SZ',
+            'TC','TD','TF','TG','TH','TJ','TK','TL','TM','TN','TO','TR','TT','TV','TW','TZ',
+            'UA','UG','UM','US','UY','UZ',
+            'VA','VC','VE','VG','VI','VN','VU',
+            'WF','WS',
+            'YE','YT',
+            'ZA','ZM','ZW',
+        ];
+        $set = [];
+        foreach ($codes as $c) {
+            $set[$c] = true;
+        }
+
+        return $set;
+    }
+
+    private static function normSpaces(string $s): string
+    {
+        $s = trim($s);
+        $s = preg_replace('/\s+/u', ' ', $s) ?? $s;
+
+        return $s;
+    }
+
+    /** @return list<string> */
+    private static function words(string $s): array
+    {
+        $s = self::normSpaces($s);
+        if ($s === '') {
+            return [];
+        }
+        $parts = preg_split('/\s+/u', $s) ?: [];
+        $out = [];
+        foreach ($parts as $p) {
+            $p = trim((string) $p);
+            if ($p !== '') {
+                $out[] = $p;
+            }
+        }
+
+        return $out;
+    }
+
+    private static function isNameValid(string $s): bool
+    {
+        $s = self::normSpaces($s);
+        if ($s === '') {
+            return false;
+        }
+        // Solo letras, espacios, guiones y acentos (unicode letters + marks)
+        if (!preg_match('/^[\p{L}\p{M}\s-]+$/u', $s)) {
+            return false;
+        }
+        $w = self::words($s);
+        if (count($w) < 2) {
+            return false;
+        }
+        foreach ($w as $word) {
+            if (!preg_match('/^[\p{L}\p{M}-]{3,}$/u', $word)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function isCityValid(string $s): bool
+    {
+        $s = self::normSpaces($s);
+        if (mb_strlen($s) < 2) {
+            return false;
+        }
+        if (preg_match('/^\d+$/u', $s)) {
+            return false;
+        }
+        if (!preg_match('/^[\p{L}\p{M}\s-]+$/u', $s)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function isProvinceValid(string $s): bool
+    {
+        $s = self::normSpaces($s);
+        if (mb_strlen($s) < 2) {
+            return false;
+        }
+        if (!preg_match('/^[\p{L}\p{M}\s-]+$/u', $s)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function isAddressValid(string $s): bool
+    {
+        $s = trim($s);
+        if (mb_strlen($s) < 5) {
+            return false;
+        }
+        // Debe contener al menos un número (número de calle)
+        if (!preg_match('/\d/u', $s)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function isPostalValid(string $s): bool
+    {
+        $s = self::normSpaces($s);
+        $len = mb_strlen($s);
+        if ($len < 3 || $len > 10) {
+            return false;
+        }
+        if (!preg_match('/^[A-Za-z0-9-]+$/', $s)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static function isPhoneValidOrEmpty(string $s): bool
+    {
+        $s = trim($s);
+        if ($s === '') {
+            return true;
+        }
+        if (!preg_match('/^[0-9\s()+-]+$/', $s)) {
+            return false;
+        }
+        $digits = preg_replace('/\D+/', '', $s) ?? '';
+        $n = strlen($digits);
+        return $n >= 7 && $n <= 15;
+    }
+
     /** @return list<int> */
     private static function allowedPacks(): array
     {
@@ -205,6 +365,7 @@ final class CheckoutController extends BaseController
             'checkoutOld'            => $checkoutOld,
             'checkoutFieldErrors'    => $checkoutFieldErrors,
             'payValidateMsgsJson'    => $this->buildPayValidateMsgsJson(),
+            'countryCodeSet'         => self::countryCodeSet(),
         ]);
     }
 
@@ -215,6 +376,8 @@ final class CheckoutController extends BaseController
             return isset($_POST[$key]) && is_string($_POST[$key]) ? trim($_POST[$key]) : '';
         };
 
+        $country = strtoupper(mb_substr($s('country'), 0, 2));
+
         return [
             'email'          => mb_substr($s('email'), 0, 254),
             'name'           => mb_substr($s('name'), 0, 200),
@@ -222,7 +385,7 @@ final class CheckoutController extends BaseController
             'postal'         => mb_substr($s('postal'), 0, 32),
             'city'           => mb_substr($s('city'), 0, 120),
             'province'       => mb_substr($s('province'), 0, 120),
-            'country'        => mb_substr($s('country'), 0, 120),
+            'country'        => $country,
             'phone'          => mb_substr($s('phone'), 0, 40),
             'shipping'       => isset($_POST['shipping']) && $_POST['shipping'] === 'pickup' ? 'pickup' : 'standard',
             'payment'        => isset($_POST['payment']) && $_POST['payment'] === 'transfer' ? 'transfer' : 'card',
@@ -273,11 +436,14 @@ final class CheckoutController extends BaseController
             $e['email'] = 'checkout.field_invalid_email';
         }
 
-        $nameLen = mb_strlen((string) $o['name']);
-        if ($nameLen < 2) {
+        $name = (string) $o['name'];
+        $nameLen = mb_strlen($name);
+        if ($nameLen === 0) {
             $e['name'] = 'checkout.field_required_name';
         } elseif ($nameLen > 200) {
             $e['name'] = 'checkout.field_error_name_len';
+        } elseif (!self::isNameValid($name)) {
+            $e['name'] = 'checkout.field_invalid_name';
         }
 
         $addr = (string) $o['address'];
@@ -285,6 +451,8 @@ final class CheckoutController extends BaseController
             $e['address'] = 'checkout.field_required_address';
         } elseif (mb_strlen($addr) > 500) {
             $e['address'] = 'checkout.field_error_address_len';
+        } elseif (!self::isAddressValid($addr)) {
+            $e['address'] = 'checkout.field_invalid_address';
         }
 
         $postal = (string) $o['postal'];
@@ -292,28 +460,40 @@ final class CheckoutController extends BaseController
             $e['postal'] = 'checkout.field_required_postal';
         } elseif (mb_strlen($postal) > 32) {
             $e['postal'] = 'checkout.field_error_postal_len';
+        } elseif (!self::isPostalValid($postal)) {
+            $e['postal'] = 'checkout.field_invalid_postal';
         }
 
-        if ((string) $o['city'] === '') {
+        $city = (string) $o['city'];
+        if ($city === '') {
             $e['city'] = 'checkout.field_required_city';
-        } elseif (mb_strlen((string) $o['city']) > 120) {
+        } elseif (mb_strlen($city) > 120) {
             $e['city'] = 'checkout.field_error_city_len';
+        } elseif (!self::isCityValid($city)) {
+            $e['city'] = 'checkout.field_invalid_city';
         }
 
-        if ((string) $o['province'] === '') {
+        $prov = (string) $o['province'];
+        if ($prov === '') {
             $e['province'] = 'checkout.field_required_province';
-        } elseif (mb_strlen((string) $o['province']) > 120) {
+        } elseif (mb_strlen($prov) > 120) {
             $e['province'] = 'checkout.field_error_province_len';
+        } elseif (!self::isProvinceValid($prov)) {
+            $e['province'] = 'checkout.field_invalid_province';
         }
 
-        if ((string) $o['country'] === '') {
+        $country = (string) $o['country'];
+        if ($country === '') {
             $e['country'] = 'checkout.field_required_country';
-        } elseif (mb_strlen((string) $o['country']) > 120) {
-            $e['country'] = 'checkout.field_error_country_len';
+        } elseif (!isset(self::countryCodeSet()[$country])) {
+            $e['country'] = 'checkout.field_invalid_country';
         }
 
-        if (mb_strlen((string) $o['phone']) > 40) {
+        $phone = (string) $o['phone'];
+        if (mb_strlen($phone) > 40) {
             $e['phone'] = 'checkout.field_error_phone_len';
+        } elseif (!self::isPhoneValidOrEmpty($phone)) {
+            $e['phone'] = 'checkout.field_invalid_phone';
         }
 
         return $e;
@@ -326,12 +506,19 @@ final class CheckoutController extends BaseController
             'emailRequired'     => Lang::raw('checkout.field_required_email'),
             'emailInvalid'      => Lang::raw('checkout.field_invalid_email'),
             'nameRequired'      => Lang::raw('checkout.field_required_name'),
+            'nameInvalid'       => Lang::raw('checkout.field_invalid_name'),
             'addressRequired'   => Lang::raw('checkout.field_required_address'),
+            'addressInvalid'    => Lang::raw('checkout.field_invalid_address'),
             'postalRequired'    => Lang::raw('checkout.field_required_postal'),
+            'postalInvalid'     => Lang::raw('checkout.field_invalid_postal'),
             'cityRequired'      => Lang::raw('checkout.field_required_city'),
+            'cityInvalid'       => Lang::raw('checkout.field_invalid_city'),
             'provinceRequired'  => Lang::raw('checkout.field_required_province'),
+            'provinceInvalid'   => Lang::raw('checkout.field_invalid_province'),
             'countryRequired'   => Lang::raw('checkout.field_required_country'),
+            'countryInvalid'    => Lang::raw('checkout.field_invalid_country'),
             'phoneTooLong'      => Lang::raw('checkout.field_error_phone_len'),
+            'phoneInvalid'      => Lang::raw('checkout.field_invalid_phone'),
             'paymentCard'       => Lang::raw('checkout.field_error_payment_card'),
         ];
 

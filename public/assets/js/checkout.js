@@ -311,46 +311,123 @@ if (layout && mainForm) {
       showFieldError('email', payMsgs.emailInvalid || '—');
     }
 
-    const nameVal = (mainForm.querySelector('#checkout-field-name')?.value || '').trim();
-    if (nameVal.length < 2) {
+    const normSpaces = (s) => (s || '').trim().replace(/\s+/g, ' ');
+
+    const isNameValid = (v) => {
+      const s = normSpaces(v);
+      if (!s) return false;
+      if (!/^[\p{L}\p{M}\s-]+$/u.test(s)) return false;
+      const parts = s.split(' ').filter(Boolean);
+      if (parts.length < 2) return false;
+      for (const w of parts) {
+        if (!/^[\p{L}\p{M}-]{3,}$/u.test(w)) return false;
+      }
+      return true;
+    };
+
+    const isCityValid = (v) => {
+      const s = normSpaces(v);
+      if (s.length < 2) return false;
+      if (/^\d+$/.test(s)) return false;
+      if (!/^[\p{L}\p{M}\s-]+$/u.test(s)) return false;
+      return true;
+    };
+
+    const isProvinceValid = (v) => {
+      const s = normSpaces(v);
+      if (s.length < 2) return false;
+      if (!/^[\p{L}\p{M}\s-]+$/u.test(s)) return false;
+      return true;
+    };
+
+    const isAddressValid = (v) => {
+      const s = (v || '').trim();
+      if (s.length < 5) return false;
+      if (!/\d/.test(s)) return false;
+      return true;
+    };
+
+    const isPostalValid = (v) => {
+      const s = normSpaces(v);
+      if (s.length < 3 || s.length > 10) return false;
+      if (!/^[A-Za-z0-9-]+$/.test(s)) return false;
+      return true;
+    };
+
+    const isPhoneValidOrEmpty = (v) => {
+      const s = (v || '').trim();
+      if (!s) return true;
+      if (!/^[0-9\s()+-]+$/.test(s)) return false;
+      const digits = s.replace(/\D+/g, '');
+      return digits.length >= 7 && digits.length <= 15;
+    };
+
+    const nameVal = (mainForm.querySelector('#checkout-field-name')?.value || '');
+    const nameNorm = normSpaces(nameVal);
+    if (!nameNorm) {
       failed.add('name');
       showFieldError('name', payMsgs.nameRequired || '—');
+    } else if (!isNameValid(nameNorm)) {
+      failed.add('name');
+      showFieldError('name', payMsgs.nameInvalid || '—');
     }
 
-    const addrVal = (mainForm.querySelector('#checkout-field-address')?.value || '').trim();
-    if (!addrVal) {
+    const addrVal = (mainForm.querySelector('#checkout-field-address')?.value || '');
+    const addrNorm = (addrVal || '').trim();
+    if (!addrNorm) {
       failed.add('address');
       showFieldError('address', payMsgs.addressRequired || '—');
+    } else if (!isAddressValid(addrNorm)) {
+      failed.add('address');
+      showFieldError('address', payMsgs.addressInvalid || '—');
     }
 
-    const postalVal = (mainForm.querySelector('#checkout-field-postal')?.value || '').trim();
-    if (!postalVal) {
+    const postalVal = (mainForm.querySelector('#checkout-field-postal')?.value || '');
+    const postalNorm = normSpaces(postalVal);
+    if (!postalNorm) {
       failed.add('postal');
       showFieldError('postal', payMsgs.postalRequired || '—');
+    } else if (!isPostalValid(postalNorm)) {
+      failed.add('postal');
+      showFieldError('postal', payMsgs.postalInvalid || '—');
     }
 
-    const cityVal = (mainForm.querySelector('#checkout-field-city')?.value || '').trim();
-    if (!cityVal) {
+    const cityVal = (mainForm.querySelector('#checkout-field-city')?.value || '');
+    const cityNorm = normSpaces(cityVal);
+    if (!cityNorm) {
       failed.add('city');
       showFieldError('city', payMsgs.cityRequired || '—');
+    } else if (!isCityValid(cityNorm)) {
+      failed.add('city');
+      showFieldError('city', payMsgs.cityInvalid || '—');
     }
 
-    const provVal = (mainForm.querySelector('#checkout-field-province')?.value || '').trim();
-    if (!provVal) {
+    const provVal = (mainForm.querySelector('#checkout-field-province')?.value || '');
+    const provNorm = normSpaces(provVal);
+    if (!provNorm) {
       failed.add('province');
       showFieldError('province', payMsgs.provinceRequired || '—');
+    } else if (!isProvinceValid(provNorm)) {
+      failed.add('province');
+      showFieldError('province', payMsgs.provinceInvalid || '—');
     }
 
     const countryVal = (mainForm.querySelector('#checkout-field-country')?.value || '').trim();
     if (!countryVal) {
       failed.add('country');
       showFieldError('country', payMsgs.countryRequired || '—');
+    } else if (countryVal.length !== 2) {
+      failed.add('country');
+      showFieldError('country', payMsgs.countryInvalid || '—');
     }
 
     const phoneVal = mainForm.querySelector('#checkout-field-phone')?.value || '';
     if (phoneVal.length > 40) {
       failed.add('phone');
       showFieldError('phone', payMsgs.phoneTooLong || '—');
+    } else if (!isPhoneValidOrEmpty(phoneVal)) {
+      failed.add('phone');
+      showFieldError('phone', payMsgs.phoneInvalid || '—');
     }
 
     const payCard = mainForm.querySelector('[data-checkout-pay-card]');

@@ -19,6 +19,7 @@ use App\Lang\Lang;
 /** @var array<string, mixed> $checkoutOld */
 /** @var array<string, string> $checkoutFieldErrors */
 /** @var string $payValidateMsgsJson */
+/** @var array<string, true> $countryCodeSet */
 
 $line            = $checkoutLine ?? [];
 $formError       = $formError ?? null;
@@ -34,6 +35,7 @@ $catalogJson     = $catalogJson ?? '[]';
 $checkoutOld     = $checkoutOld ?? [];
 $checkoutFieldErrors = $checkoutFieldErrors ?? [];
 $payValidateMsgsJson = $payValidateMsgsJson ?? '{}';
+$countryCodeSet = $countryCodeSet ?? [];
 
 $cartSubtotalCents = 0;
 foreach ($cartLines as $cl) {
@@ -232,7 +234,17 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
             </label>
             <label class="field<?= $fe('country') ? ' field--invalid' : '' ?>" data-checkout-field="country" for="checkout-field-country">
               <span><?= Lang::t('checkout.label_country') ?></span>
-              <input type="text" id="checkout-field-country" name="country" autocomplete="country-name" required placeholder="<?= Lang::t('checkout.ph_country') ?>" value="<?= htmlspecialchars((string) ($checkoutOld['country'] ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+              <select id="checkout-field-country" name="country" class="field-select" autocomplete="country" required>
+                <?php
+                $countryOld = strtoupper((string) ($checkoutOld['country'] ?? ''));
+                ?>
+                <option value=""><?= Lang::t('checkout.country_select_placeholder') ?></option>
+                <?php foreach (array_keys($countryCodeSet) as $code) :
+                    $sel = $countryOld === $code ? ' selected' : '';
+                    ?>
+                  <option value="<?= htmlspecialchars($code, ENT_QUOTES, 'UTF-8') ?>"<?= $sel ?>><?= Lang::t('checkout.countries.' . $code) ?></option>
+                <?php endforeach; ?>
+              </select>
               <span class="field-error-msg" id="checkout-err-country" role="alert"<?= $fe('country') ? '' : ' hidden' ?>><?= $fe('country') ? $feMsg('country') : '' ?></span>
             </label>
           </div>
