@@ -1,0 +1,10 @@
+-- DB-MIGRATION-001: crear tabla leads (post-pago confirmado)
+CREATE TABLE IF NOT EXISTS leads (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(254) NOT NULL UNIQUE,
+  name VARCHAR(300),
+  lang CHAR(2) DEFAULT 'es',
+  source VARCHAR(100) DEFAULT 'checkout',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+

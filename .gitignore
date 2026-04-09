@@ -4,6 +4,7 @@
 /config/database.php
 /config/redsys.php
 /config/packlink.php
+/config/mail.php
 *.log
 .DS_Store
 Thumbs.db

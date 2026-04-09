@@ -113,3 +113,4 @@ Cada ítem: PASS / FAIL con evidencia (pasos, captura, commit).
 | Fecha | ID | Resumen | Evidencia |
 |-------|-----|---------|-----------|
 | 2026-04-08 | `GOV-TF-002` | Repo GitHub creado y push `main` | `gh repo create los-monstruos-de-tarumba`, remoto `origin` |
+| 2026-04-09 | `DB-MIGRATION-001` | Añadida migración + snapshot para tabla `leads` (captura post-pago) | `migrations/2026-04-09_leads.sql`, `context/db_schema.sql` |

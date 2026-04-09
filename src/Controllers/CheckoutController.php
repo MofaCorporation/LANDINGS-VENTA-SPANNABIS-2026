@@ -937,6 +937,7 @@ final class CheckoutController extends BaseController
             'cart_lines'       => $linesForDb,
             'shipping'         => $shipping,
             'payment'          => 'card',
+            'lang'             => Lang::current(),
             'email'            => $email,
             'address_line'     => $address,
             'postal'           => $postal,

@@ -55,5 +55,14 @@ CREATE TABLE IF NOT EXISTS sessions (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS leads (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(254) NOT NULL UNIQUE,
+    name VARCHAR(300),
+    lang CHAR(2) DEFAULT 'es',
+    source VARCHAR(100) DEFAULT 'checkout',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Datos iniciales (opcional): las 5 variedades — slugs ejemplo; confirmar en RECON
 -- INSERT INTO products (...) VALUES (...);

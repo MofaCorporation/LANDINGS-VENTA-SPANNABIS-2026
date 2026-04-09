@@ -101,7 +101,7 @@ final class Order
     }
 
     /** @param array<string, mixed> $params */
-    public static function markAsPaid(string $orderRef, array $params): void
+    public static function markAsPaid(string $orderRef, array $params): bool
     {
         $pdo = Database::get();
         $pdo->beginTransaction();
@@ -112,13 +112,13 @@ final class Order
             if ($row === false) {
                 $pdo->rollBack();
 
-                return;
+                return false;
             }
 
             if ($row['status'] === 'paid') {
                 $pdo->commit();
 
-                return;
+                return false;
             }
 
             $json = json_encode(
@@ -130,6 +130,7 @@ final class Order
             );
             $up->execute(['resp' => $json, 'id' => (int) $row['id']]);
             $pdo->commit();
+            return true;
         } catch (\Throwable $e) {
             $pdo->rollBack();
             throw $e;
@@ -169,5 +170,68 @@ final class Order
             $pdo->rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Datos para emails / post-pago (sin depender de sesión).
+     *
+     * @return array{
+     *   order_ref: string,
+     *   status: string,
+     *   amount_cents: int,
+     *   customer_name: string|null,
+     *   customer_email: string|null,
+     *   shipping: array<string, mixed>,
+     *   product: array{name_es: string, name_en: string, slug_es: string, slug_en: string}
+     * }|null
+     */
+    public static function getForEmail(string $orderRef): ?array
+    {
+        $pdo = Database::get();
+        $st  = $pdo->prepare(
+            'SELECT
+                o.order_ref,
+                o.status,
+                o.amount_cents,
+                o.customer_name,
+                o.customer_email,
+                o.shipping_json,
+                p.name_es,
+                p.name_en,
+                p.slug_es,
+                p.slug_en
+             FROM orders o
+             INNER JOIN products p ON p.id = o.product_id
+             WHERE o.order_ref = :r
+             LIMIT 1',
+        );
+        $st->execute(['r' => $orderRef]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        if ($row === false) {
+            return null;
+        }
+
+        $shipping = [];
+        if (!empty($row['shipping_json']) && is_string($row['shipping_json'])) {
+            $decoded = json_decode($row['shipping_json'], true);
+            if (is_array($decoded)) {
+                $shipping = $decoded;
+            }
+        }
+
+        return [
+            'order_ref'      => (string) $row['order_ref'],
+            'status'         => (string) $row['status'],
+            'amount_cents'   => (int) $row['amount_cents'],
+            'customer_name'  => isset($row['customer_name']) ? (string) $row['customer_name'] : null,
+            'customer_email' => isset($row['customer_email']) ? (string) $row['customer_email'] : null,
+            'shipping'       => $shipping,
+            'product'        => [
+                'name_es' => (string) $row['name_es'],
+                'name_en' => (string) $row['name_en'],
+                'slug_es' => (string) $row['slug_es'],
+                'slug_en' => (string) $row['slug_en'],
+            ],
+        ];
     }
 }
