@@ -56,6 +56,8 @@ final class Router
         }
 
         // production-v1: solo lady-cupcake + checkout (resto de landings → 404).
+        // TODO(post-TPV): habilitar rutas dj-piggy, holy-boss,
+        // nitro-bud, toxic-mutant cuando el banco apruebe el TPV
         match ($path) {
             '/lady-cupcake' => (new ProductController())->ladyCupcake(),
             '/checkout'     => (new CheckoutController())->index(),

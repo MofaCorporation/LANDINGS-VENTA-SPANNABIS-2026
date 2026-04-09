@@ -67,6 +67,8 @@ final class ProductController extends BaseController
                 'prefix'           => 'product.lady_cupcake',
                 'variety'          => 'lady-cupcake',
                 'hero'             => '/assets/img/productos/lady-cupcake/hero-lady-cupcake-web.png',
+                // TODO(post-TPV): restaurar comprar-lady-cupcake.png /
+                // buy-seeds-lady-cupcake.png cuando el banco apruebe el TPV
                 'buyEs'            => '/assets/img/productos/lady-cupcake/comprar-coleccionable-pepe.png',
                 'buyEn'            => '/assets/img/productos/lady-cupcake/comprar-coleccionable-pepe.png',
                 'h1'               => ['LADY', 'CUPCAKE'],
