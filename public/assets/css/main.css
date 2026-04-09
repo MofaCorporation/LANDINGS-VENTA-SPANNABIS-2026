@@ -27,20 +27,27 @@ body {
 }
 
 .tf-lang-switch__btn {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-family: var(--font-bangers, "Bangers", ui-sans-serif, system-ui, sans-serif);
+  font-size: 0.9rem;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #fff;
+  color: #000;
   border: 2px solid #fff;
-  background: #000;
-  padding: 0.25rem 0.75rem;
+  background: #fff;
+  padding: 0.35rem 0.85rem;
   display: inline-block;
   text-decoration: none;
-  transition: transform 0.15s ease;
+  box-shadow: 6px 6px #000;
+  transform: rotate(-2deg);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .tf-lang-switch__btn:hover {
-  transform: translateY(-2px);
+  transform: rotate(-2deg) translateY(-2px);
+}
+
+.tf-lang-switch__btn:active {
+  transform: rotate(-2deg) translate(2px, 2px);
+  box-shadow: 0 0 #000;
 }

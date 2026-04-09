@@ -55,6 +55,6 @@ $langSwitchLabel = Lang::t('nav.lang_switch');
 <?php if (!$checkoutUi) : ?>
 <div id="root">
 <div class="tf-lang-switch" style="position:fixed;top:1rem;right:1rem;left:auto;z-index:50;">
-    <a href="<?= $langSwitchHref ?>" class="tf-lang-switch__btn"><?= $langSwitchLabel ?></a>
+    <a href="<?= $langSwitchHref ?>" class="tf-lang-switch__btn tf-title-bangers"><?= $langSwitchLabel ?></a>
 </div>
 <?php endif; ?>
