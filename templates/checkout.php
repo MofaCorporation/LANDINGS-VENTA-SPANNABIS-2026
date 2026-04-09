@@ -237,9 +237,14 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
               <select id="checkout-field-country" name="country" class="field-select" autocomplete="country" required>
                 <?php
                 $countryOld = strtoupper((string) ($checkoutOld['country'] ?? ''));
+                $countryCodes = array_keys($countryCodeSet);
+                sort($countryCodes, SORT_STRING);
+                $countryCodes = array_values(array_filter($countryCodes, static fn (string $c): bool => $c !== 'ES'));
                 ?>
                 <option value=""><?= Lang::t('checkout.country_select_placeholder') ?></option>
-                <?php foreach (array_keys($countryCodeSet) as $code) :
+                <option value="ES"<?= $countryOld === 'ES' ? ' selected' : '' ?>><?= Lang::t('checkout.countries.ES') ?></option>
+                <option disabled>──────────</option>
+                <?php foreach ($countryCodes as $code) :
                     $sel = $countryOld === $code ? ' selected' : '';
                     ?>
                   <option value="<?= htmlspecialchars($code, ENT_QUOTES, 'UTF-8') ?>"<?= $sel ?>><?= Lang::t('checkout.countries.' . $code) ?></option>

@@ -156,10 +156,10 @@ final class CheckoutController extends BaseController
     {
         $s = self::normSpaces($s);
         $len = mb_strlen($s);
-        if ($len < 3 || $len > 10) {
+        if ($len < 4 || $len > 10) {
             return false;
         }
-        if (!preg_match('/^[A-Za-z0-9-]+$/', $s)) {
+        if (!preg_match('/^[0-9]+$/', $s)) {
             return false;
         }
 

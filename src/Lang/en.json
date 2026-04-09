@@ -95,7 +95,7 @@
     "field_error_address_len": "Address is too long.",
     "field_required_postal": "Enter your postal code.",
     "field_error_postal_len": "Postal code is not valid.",
-    "field_invalid_postal": "Postal code is not valid.",
+    "field_invalid_postal": "Postal code is not valid. Use digits only (4–10 digits).",
     "field_required_city": "Enter your city.",
     "field_error_city_len": "City is not valid.",
     "field_invalid_city": "City is not valid.",
@@ -177,6 +177,7 @@
     "ko_home": "Home"
     ,
     "countries": {
+      "ES": "Spain",
       "AD": "Andorra",
       "AE": "United Arab Emirates",
       "AF": "Afghanistan",
@@ -244,7 +245,6 @@
       "EG": "Egypt",
       "EH": "Western Sahara",
       "ER": "Eritrea",
-      "ES": "Spain",
       "ET": "Ethiopia",
       "FI": "Finland",
       "FJ": "Fiji",

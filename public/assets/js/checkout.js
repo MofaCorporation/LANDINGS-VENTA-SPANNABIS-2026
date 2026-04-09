@@ -349,8 +349,8 @@ if (layout && mainForm) {
 
     const isPostalValid = (v) => {
       const s = normSpaces(v);
-      if (s.length < 3 || s.length > 10) return false;
-      if (!/^[A-Za-z0-9-]+$/.test(s)) return false;
+      if (s.length < 4 || s.length > 10) return false;
+      if (!/^[0-9]+$/.test(s)) return false;
       return true;
     };
 
