@@ -27,7 +27,7 @@ $logoUrl  = asset_url('/assets/img/ui/logo-tarumbas-farm.png');
     <p class="checkout-result-lead"><?= Lang::t('checkout.ko_lead') ?></p>
     <a class="checkout-back-link" href="<?= htmlspecialchars($retryHref, ENT_QUOTES, 'UTF-8') ?>"><?= Lang::t('checkout.ko_retry') ?></a>
     <p style="margin-top:1rem">
-      <a class="checkout-foot__mailto" href="<?= htmlspecialchars(url_lang('/lady-cupcake'), ENT_QUOTES, 'UTF-8') ?>"><?= Lang::t('checkout.ko_home') ?></a>
+      <a class="checkout-foot__mailto" href="<?= url_lang('/lady-cupcake') ?>"><?= Lang::t('checkout.ko_home') ?></a>
     </p>
   </div>
 </div>
