@@ -41,15 +41,22 @@ final class PacklinkService
             throw new \RuntimeException('Packlink: falta api_key en configuración.');
         }
 
+        $fromCountry = self::ORIGIN_COUNTRY;
+        $fromZip     = self::ORIGIN_ZIP;
+        $toCountry   = $countryCode;
+        $toZip       = (string) $postalCode;
+
+        // Packlink Pro requiere el formato con corchetes sin URL-encoding en las keys.
+        // Escapamos valores, no las keys (para evitar inyección en query string).
         $params = [
-            'from[country]'            => self::ORIGIN_COUNTRY,
-            'from[zip]'                => self::ORIGIN_ZIP,
-            'to[country]'              => $countryCode,
-            'to[zip]'                  => (string) $postalCode,
-            'packages[0][weight]'      => (string) self::PKG_WEIGHT_KG,
-            'packages[0][width]'       => (string) self::PKG_W_CM,
-            'packages[0][height]'      => (string) self::PKG_H_CM,
-            'packages[0][length]'      => (string) self::PKG_L_CM,
+            'from[country]' => $fromCountry,
+            'from[zip]' => $fromZip,
+            'to[country]' => $toCountry,
+            'to[zip]' => $toZip,
+            'packages[0][weight]' => (string) self::PKG_WEIGHT_KG,
+            'packages[0][width]' => (string) self::PKG_W_CM,
+            'packages[0][height]' => (string) self::PKG_H_CM,
+            'packages[0][length]' => (string) self::PKG_L_CM,
         ];
 
         $base = 'https://api.packlink.com';
@@ -59,10 +66,20 @@ final class PacklinkService
             $base = 'https://api.packlink.com';
         }
 
-        $url = $base . '/v1/services?' . http_build_query($params);
+        $query =
+            'from[country]=' . rawurlencode($fromCountry)
+            . '&from[zip]=' . rawurlencode($fromZip)
+            . '&to[country]=' . rawurlencode($toCountry)
+            . '&to[zip]=' . rawurlencode($toZip)
+            . '&packages[0][weight]=' . rawurlencode((string) self::PKG_WEIGHT_KG)
+            . '&packages[0][width]=' . rawurlencode((string) self::PKG_W_CM)
+            . '&packages[0][height]=' . rawurlencode((string) self::PKG_H_CM)
+            . '&packages[0][length]=' . rawurlencode((string) self::PKG_L_CM);
+
+        $url = $base . '/v1/services?' . $query;
 
         error_log('[Packlink] URL: ' . $url);
-        error_log('[Packlink] Params: ' . http_build_query($params));
+        error_log('[Packlink] Params: ' . $query);
 
         $apiKey = $this->apiKey;
         $headers = [
