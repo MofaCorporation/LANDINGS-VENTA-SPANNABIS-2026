@@ -1,5 +1,6 @@
 /vendor/
 /.env
+/config/app.php
 /config/database.php
 /config/redsys.php
 *.log
