@@ -198,17 +198,17 @@ if (layout && mainForm) {
     if (quoteKeyInput) quoteKeyInput.value = currentQuoteKey;
 
     // Seleccionar por defecto la primera (normalmente la más barata, viene ordenada por el backend)
-    const defaultId = options[0]?.id || '';
+    const defaultId = options[0]?.id != null ? String(options[0].id) : '';
     optionIdInput && (optionIdInput.value = defaultId);
-    currentShipCents = parseInt(options[0]?.price_cents, 10) || 0;
+    currentShipCents = Number(options[0]?.price_cents) || 0;
 
     const name = 'shipping_option_ui';
     options.forEach((opt, idx) => {
-      const id = opt.id || '';
-      const carrier = escapeHtml(opt.carrier || '—');
-      const service = escapeHtml(opt.service_name || '—');
-      const cents = parseInt(opt.price_cents, 10) || 0;
-      const days = opt.days === null || opt.days === undefined ? null : (parseInt(opt.days, 10) || null);
+      const id = opt.id != null ? String(opt.id) : '';
+      const carrier = escapeHtml(opt.carrier != null ? String(opt.carrier) : '—');
+      const service = escapeHtml(opt.service_name != null ? String(opt.service_name) : '—');
+      const cents = Number(opt.price_cents) || 0;
+      const days = opt.days === null || opt.days === undefined ? null : (parseInt(String(opt.days), 10) || null);
       const labelPrice = formatMoney(cents, locale);
       const labelDays = days ? (document.documentElement.lang === 'en' ? `${days} days` : `${days} días`) : '';
       const checked = idx === 0 ? ' checked' : '';
@@ -274,7 +274,8 @@ if (layout && mainForm) {
       if (!res.ok || !data || data.ok !== true) {
         throw new Error('bad_response');
       }
-      renderShippingOptions(data.options || [], data.quote_key || '');
+      const opts = Array.isArray(data.options) ? data.options : [];
+      renderShippingOptions(opts, data.quote_key || '');
     } catch (e) {
       if (e && e.name === 'AbortError') return;
       setShipError(document.documentElement.lang === 'en'

@@ -102,32 +102,40 @@ final class PacklinkService
                 continue;
             }
 
-            $carrier = $this->pickString($item, ['carrier_name', 'carrier', 'carrierName', 'carrier_name_text']);
+            // Formato Packlink Pro v1 (lista de servicios)
+            $carrier = $this->pickString($item, ['carrier_name']);
+            if ($carrier === '') {
+                $carrier = $this->pickString($item, ['carrier', 'carrierName', 'carrier_name_text']);
+            }
             if ($carrier === '' && isset($item['carrier']) && is_array($item['carrier'])) {
                 $carrier = $this->pickString($item['carrier'], ['name', 'title']);
             }
 
-            $serviceName = $this->pickString($item, ['service_name', 'name', 'service', 'label', 'title', 'description']);
-            $days        = $this->pickIntNullable($item, ['transit_time', 'transitTime', 'delivery_time', 'deliveryTime', 'days']);
-
-            $price = $this->pickNumberNullable($item, ['price', 'total_price', 'totalPrice', 'amount']);
-            if ($price === null && isset($item['price']) && is_array($item['price'])) {
-                $price = $this->pickNumberNullable($item['price'], ['amount', 'value']);
+            $serviceName = $this->pickString($item, ['name']);
+            if ($serviceName === '') {
+                $serviceName = $this->pickString($item, ['service_name', 'service', 'label', 'title', 'description']);
             }
+
+            $basePrice = $this->pickNumberNullable($item, ['base_price', 'price', 'total_price', 'totalPrice', 'amount']);
+            if ($basePrice === null && isset($item['price']) && is_array($item['price'])) {
+                $basePrice = $this->pickNumberNullable($item['price'], ['amount', 'value', 'base_price']);
+            }
+
+            $days = $this->parseTransitDays($item['transit_time'] ?? null);
 
             if ($carrier === '' && $serviceName === '') {
                 continue;
             }
-            if ($price === null) {
+            if ($basePrice === null) {
                 continue;
             }
 
-            $priceCents = (int) round(((float) $price) * 100);
+            $priceCents = (int) round((float) $basePrice * 100);
             if ($priceCents < 0) {
                 continue;
             }
 
-            $id = $this->pickString($item, ['id', 'service_id', 'serviceId', 'carrier_service_id', 'code']);
+            $id = $this->pickServiceId($item);
             if ($id === '') {
                 $id = substr(hash('sha256', $carrier . '|' . $serviceName . '|' . (string) $priceCents . '|' . (string) ($days ?? '')), 0, 16);
             }
@@ -146,7 +154,10 @@ final class PacklinkService
             static fn (array $a, array $b): int => ($a['price_cents'] <=> $b['price_cents']) ?: strcmp($a['carrier'] . $a['service_name'], $b['carrier'] . $b['service_name']),
         );
 
-        return array_values($out);
+        $out = array_values($out);
+        error_log('[Packlink] Mapped options: ' . json_encode($out, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+
+        return $out;
     }
 
     /** @return mixed */
@@ -257,6 +268,47 @@ final class PacklinkService
             }
         }
         return null;
+    }
+
+    private function parseTransitDays(mixed $transitTime): ?int
+    {
+        if (is_int($transitTime)) {
+            return $transitTime;
+        }
+        if (!is_string($transitTime)) {
+            return null;
+        }
+        $s = trim($transitTime);
+        if ($s === '') {
+            return null;
+        }
+        if (preg_match('/(\d+)/', $s, $m) === 1) {
+            return (int) $m[1];
+        }
+
+        return null;
+    }
+
+    /** @return string id como string (API puede devolver int) */
+    private function pickServiceId(array $item): string
+    {
+        foreach (['id', 'service_id', 'serviceId', 'carrier_service_id', 'code'] as $k) {
+            if (!isset($item[$k])) {
+                continue;
+            }
+            $v = $item[$k];
+            if (is_int($v) || is_float($v)) {
+                return (string) (int) $v;
+            }
+            if (is_string($v)) {
+                $t = trim($v);
+                if ($t !== '') {
+                    return $t;
+                }
+            }
+        }
+
+        return '';
     }
 
     /** @return array<string, mixed> */
