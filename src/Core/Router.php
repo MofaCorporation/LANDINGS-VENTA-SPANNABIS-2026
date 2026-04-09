@@ -55,16 +55,13 @@ final class Router
             return;
         }
 
+        // production-v1: solo lady-cupcake + checkout (resto de landings → 404).
         match ($path) {
-            '/dj-piggy'      => (new ProductController())->djPiggy(),
-            '/holy-boss'     => (new ProductController())->holyBoss(),
-            '/lady-cupcake'  => (new ProductController())->ladyCupcake(),
-            '/nitro-bud'     => (new ProductController())->nitroBud(),
-            '/toxic-mutant'  => (new ProductController())->toxicMutant(),
-            '/checkout'      => (new CheckoutController())->index(),
-            '/checkout/ok' => (new RedsysController())->ok(),
-            '/checkout/ko' => (new RedsysController())->ko(),
-            default        => self::notFound(),
+            '/lady-cupcake' => (new ProductController())->ladyCupcake(),
+            '/checkout'     => (new CheckoutController())->index(),
+            '/checkout/ok'  => (new RedsysController())->ok(),
+            '/checkout/ko'  => (new RedsysController())->ko(),
+            default         => self::notFound(),
         };
     }
 
