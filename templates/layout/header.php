@@ -54,12 +54,7 @@ $langSwitchLabel = Lang::t('nav.lang_switch');
 <body<?= $checkoutUi ? ' class="checkout-page"' : '' ?>>
 <?php if (!$checkoutUi) : ?>
 <div id="root">
-<div class="fixed top-4 right-4 z-50">
-    <?php echo '<!-- DEBUG switchUrl: ' .
-    Lang::switchUrl($_SERVER['REQUEST_URI'] ?? '/',
-    Lang::current() === 'es' ? 'en' : 'es') .
-    ' | REQUEST_URI: ' . ($_SERVER['REQUEST_URI'] ?? 'null') .
-    ' -->'; ?>
-    <a href="<?= $langSwitchHref ?>" class="text-xs font-bold uppercase tracking-wide text-white border-2 border-white bg-black px-3 py-1 hover:-translate-y-0.5 transition-transform inline-block"><?= $langSwitchLabel ?></a>
+<div class="tf-lang-switch" style="position:fixed;top:1rem;right:1rem;left:auto;z-index:50;">
+    <a href="<?= $langSwitchHref ?>" class="tf-lang-switch__btn"><?= $langSwitchLabel ?></a>
 </div>
 <?php endif; ?>

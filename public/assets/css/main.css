@@ -3,3 +3,44 @@
   --font-headline: "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Satoshi", ui-sans-serif, system-ui, sans-serif;
 }
+
+/* Base: evitar “franja blanca” superior si falta fondo en algún bloque */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg, #0e0e0e);
+}
+
+/* root wrapper de landings */
+#root {
+  background: var(--bg, #0e0e0e);
+}
+
+/* Selector de idioma (landing): fijo arriba-derecha, sin depender de utilidades */
+.tf-lang-switch {
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  left: auto !important;
+  z-index: 50 !important;
+}
+
+.tf-lang-switch__btn {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+  border: 2px solid #fff;
+  background: #000;
+  padding: 0.25rem 0.75rem;
+  display: inline-block;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+.tf-lang-switch__btn:hover {
+  transform: translateY(-2px);
+}
