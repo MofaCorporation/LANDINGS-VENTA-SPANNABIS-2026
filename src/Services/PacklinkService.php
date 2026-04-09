@@ -41,7 +41,7 @@ final class PacklinkService
             throw new \RuntimeException('Packlink: falta api_key en configuración.');
         }
 
-        $query = [
+        $params = [
             'from[country]'            => self::ORIGIN_COUNTRY,
             'from[zip]'                => self::ORIGIN_ZIP,
             'to[country]'              => $countryCode,
@@ -59,7 +59,10 @@ final class PacklinkService
             $base = 'https://api.packlink.com';
         }
 
-        $url = $base . '/v1/services?' . http_build_query($query);
+        $url = $base . '/v1/services?' . http_build_query($params);
+
+        error_log('[Packlink] URL: ' . $url);
+        error_log('[Packlink] Params: ' . http_build_query($params));
 
         $raw = $this->httpGetJson($url, [
             'Authorization: Bearer ' . $this->apiKey,
@@ -137,14 +140,17 @@ final class PacklinkService
 
         $body = curl_exec($ch);
         $err  = curl_error($ch);
-        $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
+
+        error_log('[Packlink] Response code: ' . (string) $httpCode);
+        error_log('[Packlink] Response body: ' . (string) ($body === false ? '' : $body));
 
         if ($body === false) {
             throw new \RuntimeException('Packlink: error HTTP: ' . ($err !== '' ? $err : 'desconocido'));
         }
-        if ($code < 200 || $code >= 300) {
-            throw new \RuntimeException('Packlink: HTTP ' . (string) $code);
+        if ($httpCode < 200 || $httpCode >= 300) {
+            throw new \RuntimeException('Packlink: HTTP ' . (string) $httpCode);
         }
 
         $decoded = json_decode((string) $body, true);
