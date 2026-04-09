@@ -46,6 +46,13 @@ final class PacklinkService
         $toCountry   = $countryCode;
         $toZip       = (string) $postalCode;
 
+        if ($fromCountry === 'ES') {
+            $fromZip = str_pad($fromZip, 5, '0', STR_PAD_LEFT);
+        }
+        if ($toCountry === 'ES') {
+            $toZip = str_pad($toZip, 5, '0', STR_PAD_LEFT);
+        }
+
         // Packlink Pro requiere el formato con corchetes sin URL-encoding en las keys.
         // Escapamos valores, no las keys (para evitar inyección en query string).
         $params = [
