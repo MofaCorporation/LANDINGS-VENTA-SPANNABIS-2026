@@ -3,6 +3,7 @@
 /config/app.php
 /config/database.php
 /config/redsys.php
+/config/packlink.php
 *.log
 .DS_Store
 Thumbs.db

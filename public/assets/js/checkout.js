@@ -22,14 +22,21 @@ const layout = document.querySelector('[data-checkout-layout]');
 const mainForm = document.querySelector('[data-checkout-main]');
 
 if (layout && mainForm) {
-  const shipStd = parseInt(layout.dataset.shipStandardCents, 10) || 0;
   const freeFrom = parseInt(layout.dataset.freeFromCents, 10) || 0;
   const locale = document.documentElement.lang === 'en' ? 'en-GB' : 'es-ES';
   const packSel = document.getElementById('checkout-pack');
   const varietySel = document.getElementById('checkout-variety');
-  const shipPickupRadio = mainForm.querySelector('[data-js-ship-pickup]');
-  const shipStdRadio = mainForm.querySelector('[data-js-ship-standard]');
   const catalog = readCatalog();
+  const shippingRatesUrl = layout.dataset.shippingRatesUrl || '';
+  const shipOptionsWrap = layout.querySelector('[data-ship-options]');
+  const shipSpinner = layout.querySelector('[data-ship-spinner]');
+  const shipError = layout.querySelector('[data-ship-error]');
+  const shipFreeHint = layout.querySelector('[data-ship-free-hint]');
+  const quoteKeyInput = document.getElementById('js-shipping-quote-key');
+  const optionIdInput = document.getElementById('js-shipping-option-id');
+
+  let currentShipCents = 0;
+  let currentQuoteKey = '';
 
   const byVariety = new Map(catalog.map((row) => [row.variety, row]));
 
@@ -102,12 +109,7 @@ if (layout && mainForm) {
 
   function recalcSummary() {
     const sub = cartSubtotalFromDom();
-    let ship = 0;
-    if (shipPickupRadio?.checked) {
-      ship = 0;
-    } else {
-      ship = sub >= freeFrom ? 0 : shipStd;
-    }
+    const ship = sub >= freeFrom ? 0 : (currentShipCents || 0);
     const total = sub + ship;
     const elSub = layout.querySelector('.js-summary-sub');
     const elShip = layout.querySelector('.js-summary-ship');
@@ -120,6 +122,11 @@ if (layout && mainForm) {
     }
     if (elTot) {
       elTot.textContent = formatMoney(total, locale);
+    }
+    if (shipFreeHint) {
+      shipFreeHint.textContent = sub >= freeFrom
+        ? (document.documentElement.lang === 'en' ? 'Free shipping applied.' : 'Envío gratuito aplicado.')
+        : (document.documentElement.lang === 'en' ? 'Shipping calculated in real time.' : 'Envío calculado en tiempo real.');
     }
   }
 
@@ -152,8 +159,137 @@ if (layout && mainForm) {
     updatePreview();
   });
 
-  shipStdRadio?.addEventListener('change', recalcSummary);
-  shipPickupRadio?.addEventListener('change', recalcSummary);
+  function setShipLoading(on) {
+    if (!shipSpinner) return;
+    if (on) shipSpinner.removeAttribute('hidden');
+    else shipSpinner.setAttribute('hidden', 'hidden');
+  }
+
+  function setShipError(message) {
+    if (!shipError) return;
+    if (!message) {
+      shipError.textContent = '';
+      shipError.setAttribute('hidden', 'hidden');
+      return;
+    }
+    shipError.textContent = message;
+    shipError.removeAttribute('hidden');
+  }
+
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+
+  function renderShippingOptions(options, quoteKey) {
+    if (!shipOptionsWrap) return;
+    shipOptionsWrap.innerHTML = '';
+
+    if (!Array.isArray(options) || options.length === 0) {
+      shipOptionsWrap.innerHTML = `<p class="hint">${document.documentElement.lang === 'en' ? 'Enter country and postal code to see shipping options.' : 'Introduce país y código postal para ver opciones de envío.'}</p>`;
+      currentShipCents = 0;
+      currentQuoteKey = '';
+      if (quoteKeyInput) quoteKeyInput.value = '';
+      if (optionIdInput) optionIdInput.value = '';
+      recalcSummary();
+      return;
+    }
+
+    currentQuoteKey = quoteKey || '';
+    if (quoteKeyInput) quoteKeyInput.value = currentQuoteKey;
+
+    // Seleccionar por defecto la primera (normalmente la más barata, viene ordenada por el backend)
+    const defaultId = options[0]?.id || '';
+    optionIdInput && (optionIdInput.value = defaultId);
+    currentShipCents = parseInt(options[0]?.price_cents, 10) || 0;
+
+    const name = 'shipping_option_ui';
+    options.forEach((opt, idx) => {
+      const id = opt.id || '';
+      const carrier = escapeHtml(opt.carrier || '—');
+      const service = escapeHtml(opt.service_name || '—');
+      const cents = parseInt(opt.price_cents, 10) || 0;
+      const days = opt.days === null || opt.days === undefined ? null : (parseInt(opt.days, 10) || null);
+      const labelPrice = formatMoney(cents, locale);
+      const labelDays = days ? (document.documentElement.lang === 'en' ? `${days} days` : `${days} días`) : '';
+      const checked = idx === 0 ? ' checked' : '';
+
+      const row = document.createElement('label');
+      row.className = 'opt';
+      row.innerHTML = `
+        <div class="opt__main">
+          <input type="radio" name="${name}" value="${escapeHtml(id)}"${checked}>
+          <span>${carrier} · ${service}${labelDays ? ` <small class="hint">(${labelDays})</small>` : ''}</span>
+        </div>
+        <span class="opt__price">${escapeHtml(labelPrice)}</span>
+      `;
+
+      row.querySelector('input')?.addEventListener('change', () => {
+        const selectedId = id;
+        const selectedCents = cents;
+        if (optionIdInput) optionIdInput.value = selectedId;
+        currentShipCents = selectedCents;
+        recalcSummary();
+      });
+
+      shipOptionsWrap.appendChild(row);
+    });
+
+    recalcSummary();
+  }
+
+  let shipAbort = null;
+  let shipTimer = null;
+
+  async function fetchShippingRates() {
+    if (!shippingRatesUrl) return;
+    const country = (mainForm.querySelector('#checkout-field-country')?.value || '').trim();
+    const postal = (mainForm.querySelector('#checkout-field-postal')?.value || '').trim();
+    const csrf = (mainForm.querySelector('input[name="csrf"]')?.value || '').trim();
+
+    // Solo pedir si hay datos mínimos
+    if (!country || postal.length < 4) {
+      setShipError('');
+      renderShippingOptions([], '');
+      return;
+    }
+
+    if (shipAbort) {
+      try { shipAbort.abort(); } catch {}
+    }
+    shipAbort = new AbortController();
+
+    setShipError('');
+    setShipLoading(true);
+
+    const fd = new FormData();
+    fd.set('csrf', csrf);
+    fd.set('checkout_action', 'shipping_rates');
+    fd.set('country_code', country);
+    fd.set('postal_code', postal);
+    fd.set('cart_subtotal', String(cartSubtotalFromDom()));
+
+    try {
+      const res = await fetch(shippingRatesUrl, { method: 'POST', body: fd, signal: shipAbort.signal });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || data.ok !== true) {
+        throw new Error('bad_response');
+      }
+      renderShippingOptions(data.options || [], data.quote_key || '');
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+      setShipError(document.documentElement.lang === 'en'
+        ? 'Could not load shipping rates. Please try again.'
+        : 'No se pudo calcular el envío. Inténtalo de nuevo.');
+      renderShippingOptions([], '');
+    } finally {
+      setShipLoading(false);
+    }
+  }
+
+  function scheduleShippingFetch() {
+    if (shipTimer) clearTimeout(shipTimer);
+    shipTimer = setTimeout(fetchShippingRates, 350);
+  }
 
   document.querySelectorAll('.variety-chip[data-strain]').forEach((chip) => {
     chip.addEventListener('click', () => {
@@ -466,6 +602,14 @@ if (layout && mainForm) {
     });
   });
 
+  // Recalcular envío al cambiar país o CP
+  mainForm.querySelector('#checkout-field-country')?.addEventListener('change', () => {
+    scheduleShippingFetch();
+  });
+  mainForm.querySelector('#checkout-field-postal')?.addEventListener('input', () => {
+    scheduleShippingFetch();
+  });
+
   mainForm.querySelectorAll('[data-checkout-pay-card], [data-checkout-pay-transfer]').forEach((radio) => {
     radio.addEventListener('change', () => {
       document.getElementById('checkout-section-pay')?.classList.remove('tf-card--invalid');
@@ -481,4 +625,6 @@ if (layout && mainForm) {
   updatePreview();
   syncOrderLinesVisibility();
   recalcSummary();
+  // Primer cálculo si ya hay valores precargados
+  scheduleShippingFetch();
 }

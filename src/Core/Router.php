@@ -61,6 +61,7 @@ final class Router
         match ($path) {
             '/lady-cupcake' => (new ProductController())->ladyCupcake(),
             '/checkout'     => (new CheckoutController())->index(),
+            '/checkout/shipping-rates' => (new CheckoutController())->index(),
             '/checkout/ok'  => (new RedsysController())->ok(),
             '/checkout/ko'  => (new RedsysController())->ko(),
             default         => self::notFound(),

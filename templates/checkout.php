@@ -11,7 +11,6 @@ use App\Lang\Lang;
 /** @var string|null $formError */
 /** @var array<string, string>|null $redsysPayment */
 /** @var string|null $redsysUrl */
-/** @var int $shipStandardCents */
 /** @var int $freeShippingSubtotal */
 /** @var list<array<string, mixed>> $cartLines */
 /** @var list<array<string, mixed>> $cartView */
@@ -27,7 +26,6 @@ $redsysPayment   = $redsysPayment ?? null;
 $redsysUrl       = $redsysUrl ?? null;
 $varietyOptions  = $varietyOptions ?? [];
 $varietyChips    = $varietyChips ?? [];
-$shipStandardCents = $shipStandardCents ?? 590;
 $freeShippingSubtotal = $freeShippingSubtotal ?? 5000;
 $cartLines       = $cartLines ?? [];
 $cartView        = $cartView ?? [];
@@ -44,15 +42,12 @@ foreach ($cartLines as $cl) {
     }
 }
 
-$initShipStd = $cartSubtotalCents >= $freeShippingSubtotal ? 0 : $shipStandardCents;
-$initTotalStd = $cartSubtotalCents + $initShipStd;
-
-$shipStdFmt = format_price_cents($shipStandardCents);
 $shipZero   = format_price_cents(0);
 $logoUrl    = asset_url('/assets/img/ui/logo-tarumbas-farm.png');
 $langHref   = htmlspecialchars(base_path() . Lang::switchUrl($_SERVER['REQUEST_URI'] ?? '/', Lang::current() === 'es' ? 'en' : 'es'), ENT_QUOTES, 'UTF-8');
 $cartEmpty  = $cartView === [];
 $checkoutActionUrl = htmlspecialchars(url_lang('/checkout'), ENT_QUOTES, 'UTF-8');
+$shippingRatesUrl  = htmlspecialchars(url_lang('/checkout/shipping-rates'), ENT_QUOTES, 'UTF-8');
 
 $guestChecked = array_key_exists('guest', $checkoutOld) ? !empty($checkoutOld['guest']) : true;
 $shipStdOn    = ($checkoutOld['shipping'] ?? 'standard') !== 'pickup';
@@ -94,10 +89,9 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
   <div
     class="checkout-layout"
     data-checkout-layout
-    data-ship-standard-cents="<?= (int) $shipStandardCents ?>"
     data-free-from-cents="<?= (int) $freeShippingSubtotal ?>"
-    data-ship-standard-label="<?= htmlspecialchars($shipStdFmt, ENT_QUOTES, 'UTF-8') ?>"
     data-ship-zero-label="<?= htmlspecialchars($shipZero, ENT_QUOTES, 'UTF-8') ?>"
+    data-shipping-rates-url="<?= $shippingRatesUrl ?>"
   >
   <form
     class="checkout-main"
@@ -108,6 +102,8 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
     data-checkout-main
   >
     <input type="hidden" name="csrf" value="<?= htmlspecialchars(checkout_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="shipping_quote_key" id="js-shipping-quote-key" value="">
+    <input type="hidden" name="shipping_option_id" id="js-shipping-option-id" value="">
     <script type="application/json" id="checkout-pay-validate-msgs"><?= $payValidateMsgsJson ?></script>
 
       <?php if ($formError !== null && $formError !== '') : ?>
@@ -274,24 +270,16 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
           <span><?= Lang::t('checkout.section_shipping') ?></span>
           <img class="tf-section-title__end-icon" src="<?= htmlspecialchars(asset_url('/assets/img/ui/envios-pepe.png'), ENT_QUOTES, 'UTF-8') ?>" alt="" width="643" height="640" decoding="async">
         </h2>
-        <div class="ship-options">
-          <label class="opt">
-            <div class="opt__main">
-              <input type="radio" name="shipping" value="standard" data-js-ship-standard<?= $shipStdOn ? ' checked' : '' ?>>
-              <span><?= Lang::t('checkout.ship_standard') ?></span>
-            </div>
-            <span class="opt__price"><?= htmlspecialchars($shipStdFmt, ENT_QUOTES, 'UTF-8') ?></span>
-          </label>
-          <label class="opt">
-            <div class="opt__main">
-              <input type="radio" name="shipping" value="pickup" data-js-ship-pickup<?= $shipStdOn ? '' : ' checked' ?>>
-              <span><?= Lang::t('checkout.ship_pickup') ?></span>
-            </div>
-            <span class="opt__price"><?= htmlspecialchars($shipZero, ENT_QUOTES, 'UTF-8') ?></span>
-          </label>
+        <div class="ship-dynamic" data-ship-dynamic>
+          <div class="ship-dynamic__status">
+            <span class="ship-dynamic__spinner" data-ship-spinner hidden></span>
+            <p class="hint" data-ship-hint><?= Lang::t('checkout.ship_hint_dynamic') ?></p>
+            <p class="field-error-msg field-error-msg--block" data-ship-error hidden><?= Lang::t('checkout.ship_error') ?></p>
+          </div>
+          <div class="ship-options" data-ship-options></div>
+          <p class="hint" data-ship-free-hint><?= Lang::t('checkout.ship_free_hint') ?></p>
+          <p class="hint"><?= Lang::t('checkout.ship_note') ?></p>
         </div>
-        <p class="hint"><?= Lang::t('checkout.ship_free_hint') ?></p>
-        <p class="hint"><?= Lang::t('checkout.ship_note') ?></p>
       </section>
 
       <section class="tf-card<?= $fe('payment') ? ' tf-card--invalid' : '' ?>" id="checkout-section-pay" aria-labelledby="sec-pay">
@@ -359,11 +347,11 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
           </div>
           <div class="summary-row">
             <span><?= Lang::t('checkout.line_ship') ?></span>
-            <span class="js-summary-ship"><?= htmlspecialchars(format_price_cents($initShipStd), ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="js-summary-ship"><?= htmlspecialchars(format_price_cents(0), ENT_QUOTES, 'UTF-8') ?></span>
           </div>
           <div class="summary-row summary-row--total">
             <span><?= Lang::t('checkout.line_total') ?></span>
-            <span class="js-summary-total"><?= htmlspecialchars(format_price_cents($initTotalStd), ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="js-summary-total"><?= htmlspecialchars(format_price_cents($cartSubtotalCents), ENT_QUOTES, 'UTF-8') ?></span>
           </div>
           <button type="submit" class="cta-final checkout-cta--desktop" form="checkout-form" aria-label="<?= Lang::t('checkout.cta_pay_aria') ?>">
             <img class="cta-final__img" src="<?= htmlspecialchars(asset_url('/assets/img/ui/pagar-ahora-pepe.png'), ENT_QUOTES, 'UTF-8') ?>" alt="<?= Lang::t('checkout.submit') ?>" width="843" height="255" decoding="async">

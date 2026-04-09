@@ -7,18 +7,22 @@ namespace App\Controllers;
 use App\Lang\Lang;
 use App\Models\Order;
 use App\Services\CheckoutCatalog;
+use App\Services\PacklinkService;
 use App\Services\RedsysService;
 
 final class CheckoutController extends BaseController
 {
-    private const SHIP_STANDARD_CENTS   = 590;
-    private const FREE_SHIPPING_SUBTOTAL_CENTS = 5000;
+    // Envío gratis si subtotal >= 30000 (300€)
+    private const FREE_SHIPPING_SUBTOTAL_CENTS = 30000;
 
     private const SESSION_CART = 'cart';
 
     private const SESSION_FORM_OLD = 'checkout_form_old';
 
     private const SESSION_FIELD_ERRORS = 'checkout_field_errors';
+
+    private const SESSION_PACKLINK_QUOTE = 'packlink_quote';
+    private const PACKLINK_QUOTE_TTL_SECONDS = 15 * 60;
 
     /** @return array<string, true> */
     private static function countryCodeSet(): array
@@ -193,6 +197,14 @@ final class CheckoutController extends BaseController
             $variety = '';
         }
 
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            $subAction = isset($_POST['checkout_action']) && is_string($_POST['checkout_action']) ? trim($_POST['checkout_action']) : '';
+            if ($subAction === 'shipping_rates') {
+                $this->postShippingRates();
+                return;
+            }
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->handlePost();
 
@@ -349,7 +361,6 @@ final class CheckoutController extends BaseController
             'formError'              => is_string($err) ? $err : null,
             'redsysPayment'          => null,
             'redsysUrl'              => null,
-            'shipStandardCents'      => self::SHIP_STANDARD_CENTS,
             'freeShippingSubtotal'   => self::FREE_SHIPPING_SUBTOTAL_CENTS,
             'cartLines'              => $cartLines,
             'cartView'               => $cartView,
@@ -367,6 +378,120 @@ final class CheckoutController extends BaseController
             'payValidateMsgsJson'    => $this->buildPayValidateMsgsJson(),
             'countryCodeSet'         => self::countryCodeSet(),
         ]);
+    }
+
+    private function postShippingRates(): void
+    {
+        if (!checkout_verify_csrf((string) ($_POST['csrf'] ?? ''))) {
+            http_response_code(403);
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'error' => 'csrf'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        $country = isset($_POST['country_code']) && is_string($_POST['country_code']) ? strtoupper(trim($_POST['country_code'])) : '';
+        $postal  = isset($_POST['postal_code']) && is_string($_POST['postal_code']) ? trim($_POST['postal_code']) : '';
+
+        if ($country !== '' && strlen($country) !== 2) {
+            $country = substr($country, 0, 2);
+        }
+        if ($postal !== '' && !preg_match('/^\d{4,10}$/', $postal)) {
+            $postal = '';
+        }
+
+        // Subtotal lo calcula el servidor para seguridad, pero aceptamos el enviado para UX (no confiable).
+        $cart = $this->sanitizeCartLines($this->cartSession());
+        $this->saveCartSession($cart);
+        $subtotal = 0;
+        foreach ($cart as $row) {
+            $subtotal += (int) ($row['subtotal'] ?? 0);
+        }
+
+        $free = $subtotal >= self::FREE_SHIPPING_SUBTOTAL_CENTS;
+
+        try {
+            $rates = [];
+            if ($country !== '' && $postal !== '') {
+                $svc = new PacklinkService(PacklinkService::loadConfig());
+                $rates = $svc->getShippingRates($country, (int) $postal);
+            }
+
+            if ($rates === []) {
+                // Sin opciones (o datos insuficientes)
+                $this->savePacklinkQuote(null);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['ok' => true, 'free_shipping' => $free, 'subtotal_cents' => $subtotal, 'quote_key' => null, 'options' => []], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            if ($free) {
+                foreach ($rates as &$r) {
+                    $r['price_cents'] = 0;
+                }
+                unset($r);
+            }
+
+            $quoteKey = $this->savePacklinkQuote([
+                'created_at'     => time(),
+                'quote_key'      => bin2hex(random_bytes(16)),
+                'country'        => $country,
+                'postal'         => $postal,
+                'subtotal_cents' => $subtotal,
+                'free'           => $free,
+                'options'        => $rates,
+            ]);
+
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(
+                [
+                    'ok' => true,
+                    'free_shipping' => $free,
+                    'subtotal_cents' => $subtotal,
+                    'quote_key' => $quoteKey,
+                    'options' => $rates,
+                ],
+                JSON_UNESCAPED_UNICODE,
+            );
+            exit;
+        } catch (\Throwable $e) {
+            error_log('Packlink shipping rates: ' . $e->getMessage());
+            $this->savePacklinkQuote(null);
+            http_response_code(502);
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['ok' => false, 'error' => 'packlink_unavailable'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+    }
+
+    /** @param array<string, mixed>|null $quote */
+    private function savePacklinkQuote(?array $quote): ?string
+    {
+        if ($quote === null) {
+            unset($_SESSION[self::SESSION_PACKLINK_QUOTE]);
+            return null;
+        }
+
+        if (!isset($quote['quote_key']) || !is_string($quote['quote_key']) || $quote['quote_key'] === '') {
+            return null;
+        }
+
+        $_SESSION[self::SESSION_PACKLINK_QUOTE] = $quote;
+        return (string) $quote['quote_key'];
+    }
+
+    /** @return array<string, mixed>|null */
+    private function readPacklinkQuote(): ?array
+    {
+        $q = $_SESSION[self::SESSION_PACKLINK_QUOTE] ?? null;
+        if (!is_array($q)) {
+            return null;
+        }
+        $createdAt = isset($q['created_at']) ? (int) $q['created_at'] : 0;
+        if ($createdAt <= 0 || (time() - $createdAt) > self::PACKLINK_QUOTE_TTL_SECONDS) {
+            unset($_SESSION[self::SESSION_PACKLINK_QUOTE]);
+            return null;
+        }
+        return $q;
     }
 
     /** @return array<string, mixed> */
@@ -698,10 +823,41 @@ final class CheckoutController extends BaseController
             $subtotal += (int) ($row['subtotal'] ?? 0);
         }
 
-        $shipCents = $shipping === 'pickup' ? 0 : self::SHIP_STANDARD_CENTS;
-        if ($subtotal >= self::FREE_SHIPPING_SUBTOTAL_CENTS) {
+        // Envío seleccionado via Packlink: validar contra quote en sesión (no confiar en el cliente).
+        $shipCents = 0;
+        $quoteKey = isset($_POST['shipping_quote_key']) && is_string($_POST['shipping_quote_key']) ? trim($_POST['shipping_quote_key']) : '';
+        $optId    = isset($_POST['shipping_option_id']) && is_string($_POST['shipping_option_id']) ? trim($_POST['shipping_option_id']) : '';
+
+        $free = $subtotal >= self::FREE_SHIPPING_SUBTOTAL_CENTS;
+        if ($free) {
             $shipCents = 0;
+        } else {
+            $q = $this->readPacklinkQuote();
+            if ($q === null || $quoteKey === '' || $optId === '' || (string) ($q['quote_key'] ?? '') !== $quoteKey) {
+                $this->flashCheckoutValidation($o, ['shipping' => 'checkout.shipping_missing'], $varietyUrl, Lang::t('checkout.shipping_missing'));
+            }
+
+            $opts = $q['options'] ?? null;
+            if (!is_array($opts)) {
+                $this->flashCheckoutValidation($o, ['shipping' => 'checkout.shipping_missing'], $varietyUrl, Lang::t('checkout.shipping_missing'));
+            }
+
+            $matched = null;
+            foreach ($opts as $r) {
+                if (is_array($r) && isset($r['id']) && (string) $r['id'] === $optId) {
+                    $matched = $r;
+                    break;
+                }
+            }
+            if ($matched === null) {
+                $this->flashCheckoutValidation($o, ['shipping' => 'checkout.shipping_missing'], $varietyUrl, Lang::t('checkout.shipping_missing'));
+            }
+            $shipCents = (int) ($matched['price_cents'] ?? 0);
+            if ($shipCents < 0) {
+                $shipCents = 0;
+            }
         }
+
         $totalCents = $subtotal + $shipCents;
 
         $guest         = !empty($o['guest']);
@@ -722,7 +878,7 @@ final class CheckoutController extends BaseController
         $shippingPayload = [
             'cart_lines'       => $linesForDb,
             'shipping'         => $shipping,
-            'payment'          => $payment,
+            'payment'          => 'card',
             'email'            => $email,
             'address_line'     => $address,
             'postal'           => $postal,
@@ -816,7 +972,6 @@ final class CheckoutController extends BaseController
             'formError'             => null,
             'redsysPayment'         => $paymentParams,
             'redsysUrl'             => $redsys->getEndpointUrl(),
-            'shipStandardCents'     => self::SHIP_STANDARD_CENTS,
             'freeShippingSubtotal'  => self::FREE_SHIPPING_SUBTOTAL_CENTS,
             'cartLines'             => [],
             'cartView'              => [],
