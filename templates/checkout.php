@@ -78,6 +78,7 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
 <div class="checkout-wrap">
   <?php if ($transferReceipt !== null) :
       $trRef = htmlspecialchars($transferReceipt['order_ref'], ENT_QUOTES, 'UTF-8');
+      $trConcept = htmlspecialchars(BankTransferDetails::transferConcept($transferReceipt['order_ref']), ENT_QUOTES, 'UTF-8');
       $trAmt = htmlspecialchars(format_price_cents((int) $transferReceipt['total_cents']), ENT_QUOTES, 'UTF-8');
       ?>
     <div class="tf-card checkout-transfer-receipt" role="region" aria-labelledby="transfer-receipt-title">
@@ -89,7 +90,7 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
         <p class="checkout-bank-line"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_iban') ?></span> <?= htmlspecialchars(BankTransferDetails::IBAN, ENT_QUOTES, 'UTF-8') ?></p>
         <p class="checkout-bank-line"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_bic') ?></span> <?= htmlspecialchars(BankTransferDetails::BIC, ENT_QUOTES, 'UTF-8') ?></p>
         <p class="checkout-bank-line checkout-bank-line--amount"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_amount') ?></span> <strong><?= $trAmt ?></strong></p>
-        <p class="checkout-bank-line checkout-bank-line--concept"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_concept') ?></span> <code class="checkout-bank-concept"><?= $trRef ?></code></p>
+        <p class="checkout-bank-line checkout-bank-line--concept"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_concept') ?></span> <code class="checkout-bank-concept"><?= $trConcept ?></code></p>
       </div>
       <p class="checkout-transfer-receipt__order"><?= Lang::t('checkout.transfer_order_ref_label') ?> <strong>#<?= $trRef ?></strong></p>
       <p class="hint"><?= Lang::t('checkout.transfer_receipt_hint') ?></p>

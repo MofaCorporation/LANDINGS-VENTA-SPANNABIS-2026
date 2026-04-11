@@ -70,6 +70,7 @@ final class TransferOrderNotifications
         $e = static fn (string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
         $orderRef = (string) $order['order_ref'];
+        $concept  = BankTransferDetails::transferConcept($orderRef);
         $ship     = $order['shipping'] ?? [];
         $name     = (string) ($order['customer_name'] ?? '');
         $totalCents = is_array($ship) && isset($ship['total_cents']) ? (int) $ship['total_cents'] : (int) $order['amount_cents'];
@@ -108,7 +109,7 @@ final class TransferOrderNotifications
             . '<div style="margin-top:12px;font-size:18px;font-weight:900">' . $e($lblAmount) . ': <span style="color:#a3ff12">' . $e($amountStr) . '</span></div>'
             . '<div style="margin-top:14px;padding:12px;border:3px solid #000;background:#0b1220">'
             . '<div style="font-weight:800;margin-bottom:6px">' . $e($lblConcept) . '</div>'
-            . '<div style="font-size:20px;font-weight:900;color:#a3ff12;letter-spacing:0.04em">' . $e($orderRef) . '</div>'
+            . '<div style="font-size:20px;font-weight:900;color:#a3ff12;letter-spacing:0.04em">' . $e($concept) . '</div>'
             . '</div>'
             . '<div style="margin-top:16px;padding:12px;border:3px solid #000;background:#0b1220;font-size:14px;line-height:1.6">'
             . '<div><strong>' . $e($lblHolder) . ':</strong> ' . $e(BankTransferDetails::HOLDER) . '</div>'
@@ -124,7 +125,7 @@ final class TransferOrderNotifications
             ($lang === 'en' ? 'BANK TRANSFER' : 'TRANSFERENCIA BANCARIA') . "\n\n"
             . ($lang === 'en' ? 'Order: #' : 'Pedido: #') . $orderRef . "\n"
             . ($lang === 'en' ? 'Amount: ' : 'Importe: ') . $amountStr . "\n\n"
-            . ($lang === 'en' ? 'Payment reference (concept): ' : 'Concepto: ') . $orderRef . "\n\n"
+            . ($lang === 'en' ? 'Payment reference (concept): ' : 'Concepto: ') . $concept . "\n\n"
             . ($lang === 'en' ? 'Account holder: ' : 'Titular: ') . BankTransferDetails::HOLDER . "\n"
             . 'IBAN: ' . BankTransferDetails::IBAN . "\n"
             . 'BIC: ' . BankTransferDetails::BIC . "\n";
@@ -148,6 +149,7 @@ final class TransferOrderNotifications
         $e = static fn (string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
         $orderRef = (string) $order['order_ref'];
+        $concept  = BankTransferDetails::transferConcept($orderRef);
         $ship     = $order['shipping'] ?? [];
         $name     = (string) ($order['customer_name'] ?? '');
         $email    = (string) ($order['customer_email'] ?? '');
@@ -202,7 +204,7 @@ final class TransferOrderNotifications
             . '<div style="border:6px solid #000;background:#0f172a;box-shadow:10px 10px #000;padding:18px">'
             . '<div style="background:#9a3412;color:#fff;padding:12px 14px;font-weight:900;font-size:15px;margin:-18px -18px 14px -18px">PAGO PENDIENTE - TRANSFERENCIA</div>'
             . '<div style="font-size:22px;font-weight:900">🌱 Nuevo pedido <span style="color:#a3ff12">#' . $e($orderRef) . '</span></div>'
-            . '<div style="margin-top:10px;color:#fde68a;font-size:14px">Concepto bancario: <strong>' . $e($orderRef) . '</strong> · Importe: <strong>' . $e(format_price_cents($amountCents)) . '</strong></div>'
+            . '<div style="margin-top:10px;color:#fde68a;font-size:14px">Concepto bancario: <strong>' . $e($concept) . '</strong> · Importe: <strong>' . $e(format_price_cents($amountCents)) . '</strong></div>'
             . '<div style="margin-top:10px;color:#e4e2e2;font-size:14px">Cliente: <strong>' . $e($name !== '' ? $name : '—') . '</strong> · ' . $e($email !== '' ? $email : '—') . '</div>'
             . '<div style="margin-top:6px;color:#e4e2e2;font-size:14px">Teléfono: ' . $e($phone !== '' ? $phone : '—') . ' · Idioma: ' . $e($lang) . '</div>'
             . '<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:12px">'
@@ -225,7 +227,7 @@ final class TransferOrderNotifications
         $text =
             "PAGO PENDIENTE - TRANSFERENCIA\n"
             . "Nuevo pedido #{$orderRef}\n"
-            . 'Concepto bancario: ' . $orderRef . ' · Importe: ' . format_price_cents($amountCents) . "\n"
+            . 'Concepto bancario: ' . $concept . ' · Importe: ' . format_price_cents($amountCents) . "\n"
             . "Cliente: " . ($name !== '' ? $name : '—') . " · " . ($email !== '' ? $email : '—') . "\n"
             . "Teléfono: " . ($phone !== '' ? $phone : '—') . " · Idioma: " . $lang . "\n\n"
             . "Líneas:\n" . $linesTxt . "\n"
