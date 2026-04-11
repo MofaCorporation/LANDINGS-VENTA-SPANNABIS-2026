@@ -55,11 +55,12 @@ final class Router
             return;
         }
 
-        // production-v1: solo lady-cupcake + checkout (resto de landings → 404).
-        // TODO(post-TPV): habilitar rutas dj-piggy, holy-boss,
-        // nitro-bud, toxic-mutant cuando el banco apruebe el TPV
         match ($path) {
             '/lady-cupcake' => (new ProductController())->ladyCupcake(),
+            '/dj-piggy'     => (new ProductController())->djPiggy(),
+            '/holy-boss'    => (new ProductController())->holyBoss(),
+            '/nitro-bud'    => (new ProductController())->nitroBud(),
+            '/toxic-mutant' => (new ProductController())->toxicMutant(),
             '/checkout'     => (new CheckoutController())->index(),
             '/checkout/shipping-rates' => (new CheckoutController())->index(),
             '/checkout/ok'  => (new RedsysController())->ok(),
