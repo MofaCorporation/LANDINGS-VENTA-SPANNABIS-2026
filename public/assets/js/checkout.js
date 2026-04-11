@@ -567,12 +567,11 @@ if (layout && mainForm) {
       showFieldError('phone', payMsgs.phoneInvalid || '—');
     }
 
-    const payCard = mainForm.querySelector('[data-checkout-pay-card]');
     const payTransfer = mainForm.querySelector('[data-checkout-pay-transfer]');
-    const payMethod = payCard?.checked ? 'card' : payTransfer?.checked ? 'transfer' : 'card';
-    if (payMethod !== 'card') {
+    const payMethodOk = payTransfer?.checked === true;
+    if (!payMethodOk) {
       failed.add('payment');
-      showPaymentError(payMsgs.paymentCard || '—');
+      showPaymentError(payMsgs.paymentTransfer || '—');
     }
 
     if (failed.size > 0) {
@@ -611,7 +610,7 @@ if (layout && mainForm) {
     scheduleShippingFetch();
   });
 
-  mainForm.querySelectorAll('[data-checkout-pay-card], [data-checkout-pay-transfer]').forEach((radio) => {
+  mainForm.querySelectorAll('[data-checkout-pay-transfer]').forEach((radio) => {
     radio.addEventListener('change', () => {
       document.getElementById('checkout-section-pay')?.classList.remove('tf-card--invalid');
       mainForm.querySelector('.pay-options[data-checkout-field="payment"]')?.classList.remove('pay-options--invalid');

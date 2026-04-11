@@ -20,18 +20,24 @@ final class Order
         string $customerName,
         string $customerEmail,
         ?string $shippingJson = null,
+        string $status = 'pending',
     ): array {
+        if ($status !== 'pending' && $status !== 'pending_transfer') {
+            throw new \InvalidArgumentException('Estado de pedido inicial no válido.');
+        }
+
         $pdo = Database::get();
         $tempRef = 'TMP' . bin2hex(random_bytes(5));
 
         $ins = $pdo->prepare(
             'INSERT INTO orders (order_ref, product_id, amount_cents, currency, status, customer_name, customer_email, shipping_json)
-             VALUES (:ref, :pid, :amt, \'EUR\', \'pending\', :cname, :cemail, :sjson)',
+             VALUES (:ref, :pid, :amt, \'EUR\', :st, :cname, :cemail, :sjson)',
         );
         $ins->execute([
             'ref'    => $tempRef,
             'pid'    => $productId,
             'amt'    => $amountCents,
+            'st'     => $status,
             'cname'  => $customerName,
             'cemail' => $customerEmail,
             'sjson'  => $shippingJson,

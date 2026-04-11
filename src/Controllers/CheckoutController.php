@@ -7,8 +7,10 @@ namespace App\Controllers;
 use App\Lang\Lang;
 use App\Models\Order;
 use App\Services\CheckoutCatalog;
+use App\Services\MailService;
 use App\Services\PacklinkService;
 use App\Services\RedsysService;
+use App\Services\TransferOrderNotifications;
 
 final class CheckoutController extends BaseController
 {
@@ -23,6 +25,11 @@ final class CheckoutController extends BaseController
 
     private const SESSION_PACKLINK_QUOTE = 'packlink_quote';
     private const PACKLINK_QUOTE_TTL_SECONDS = 15 * 60;
+
+    private const SESSION_TRANSFER_RECEIPT = 'checkout_transfer_receipt';
+
+    /** TPV Redsys: desactivado hasta nueva configuración. */
+    private const ALLOW_CARD_CHECKOUT = false;
 
     /** @return array<string, true> */
     private static function countryCodeSet(): array
@@ -387,6 +394,20 @@ final class CheckoutController extends BaseController
             $err = Lang::t('checkout.error_validation_summary');
         }
 
+        $transferReceipt = null;
+        if (isset($_SESSION[self::SESSION_TRANSFER_RECEIPT]) && is_array($_SESSION[self::SESSION_TRANSFER_RECEIPT])) {
+            $tr = $_SESSION[self::SESSION_TRANSFER_RECEIPT];
+            unset($_SESSION[self::SESSION_TRANSFER_RECEIPT]);
+            $oref = isset($tr['order_ref']) && is_string($tr['order_ref']) ? $tr['order_ref'] : '';
+            $at   = isset($tr['at']) ? (int) $tr['at'] : 0;
+            if ($oref !== '' && $at > 0 && (time() - $at) <= 900) {
+                $transferReceipt = [
+                    'order_ref'   => $oref,
+                    'total_cents' => isset($tr['total_cents']) ? (int) $tr['total_cents'] : 0,
+                ];
+            }
+        }
+
         $all   = CheckoutCatalog::allResolved();
         $chips = array_values(array_filter($all, static fn (array $r): bool => $r['variety'] !== $variety));
 
@@ -407,7 +428,7 @@ final class CheckoutController extends BaseController
         }
 
         $this->render('checkout', [
-            'pageTitleKey'         => 'checkout.page_title',
+            'pageTitleKey'         => $transferReceipt !== null ? 'checkout.page_title_transfer' : 'checkout.page_title',
             'metaDescriptionKey'   => 'checkout.meta_description',
             'checkoutUi'             => true,
             'extraModuleSrc'         => null,
@@ -435,6 +456,7 @@ final class CheckoutController extends BaseController
             'payValidateMsgsJson'    => $this->buildPayValidateMsgsJson(),
             'countryCodeSet'         => self::countryCodeSet(),
             'countryCodesOrdered'    => self::countryCodesOrderedByEnglishName(),
+            'transferReceipt'        => $transferReceipt,
         ]);
     }
 
@@ -571,10 +593,22 @@ final class CheckoutController extends BaseController
             'country'        => $country,
             'phone'          => mb_substr($s('phone'), 0, 40),
             'shipping'       => isset($_POST['shipping']) && $_POST['shipping'] === 'pickup' ? 'pickup' : 'standard',
-            'payment'        => isset($_POST['payment']) && $_POST['payment'] === 'transfer' ? 'transfer' : 'card',
+            'payment'        => self::normalizePaymentFromPost(),
             'guest'          => isset($_POST['guest']),
             'create_account' => isset($_POST['create_account']),
         ];
+    }
+
+    private static function normalizePaymentFromPost(): string
+    {
+        $raw = isset($_POST['payment']) && is_string($_POST['payment']) ? trim($_POST['payment']) : 'transfer';
+
+        return match ($raw) {
+            'transfer' => 'transfer',
+            'bizum' => 'bizum',
+            'card' => 'card',
+            default => 'transfer',
+        };
     }
 
     private function resolveVarietyUrlForRedirect(string $postedV): string
@@ -702,7 +736,7 @@ final class CheckoutController extends BaseController
             'countryInvalid'    => Lang::raw('checkout.field_invalid_country'),
             'phoneTooLong'      => Lang::raw('checkout.field_error_phone_len'),
             'phoneInvalid'      => Lang::raw('checkout.field_invalid_phone'),
-            'paymentCard'       => Lang::raw('checkout.field_error_payment_card'),
+            'paymentTransfer'   => Lang::raw('checkout.field_error_payment_transfer'),
         ];
 
         return json_encode(
@@ -852,12 +886,21 @@ final class CheckoutController extends BaseController
             ? $_SESSION['checkout_variety']
             : (string) ($cart[0]['variety'] ?? '');
 
-        if ($o['payment'] !== 'card') {
+        if ($o['payment'] === 'bizum') {
             $this->flashCheckoutValidation(
                 $o,
-                ['payment' => 'checkout.field_error_payment_card'],
+                ['payment' => 'checkout.field_error_payment_bizum'],
                 $varietyUrl,
-                Lang::t('checkout.error_payment_card'),
+                Lang::t('checkout.error_payment_bizum'),
+            );
+        }
+
+        if ($o['payment'] === 'card' && !self::ALLOW_CARD_CHECKOUT) {
+            $this->flashCheckoutValidation(
+                $o,
+                ['payment' => 'checkout.field_error_payment_card_disabled'],
+                $varietyUrl,
+                Lang::t('checkout.error_payment_card_disabled'),
             );
         }
 
@@ -933,10 +976,12 @@ final class CheckoutController extends BaseController
             ];
         }
 
+        $paymentStored = $o['payment'] === 'card' ? 'card' : 'transfer';
+
         $shippingPayload = [
             'cart_lines'       => $linesForDb,
             'shipping'         => $shipping,
-            'payment'          => 'card',
+            'payment'          => $paymentStored,
             'lang'             => Lang::current(),
             'email'            => $email,
             'address_line'     => $address,
@@ -958,6 +1003,46 @@ final class CheckoutController extends BaseController
         );
 
         $primaryProductId = (int) $cart[0]['product_id'];
+
+        if ($o['payment'] === 'transfer') {
+            try {
+                $created = Order::createPending(
+                    $primaryProductId,
+                    $totalCents,
+                    $name,
+                    $email,
+                    $shippingJson,
+                    'pending_transfer',
+                );
+            } catch (\Throwable) {
+                $this->flashCheckoutValidation($o, [], $varietyUrl, Lang::t('checkout.error_order'));
+            }
+
+            try {
+                (new TransferOrderNotifications(new MailService(MailService::loadConfig())))->sendForOrder($created['order_ref']);
+            } catch (\Throwable $e) {
+                error_log('TransferOrderNotifications: ' . $e->getMessage());
+            }
+
+            unset($_SESSION['csrf_checkout']);
+            $this->saveCartSession([]);
+            $_SESSION[self::SESSION_TRANSFER_RECEIPT] = [
+                'order_ref'   => $created['order_ref'],
+                'total_cents' => $totalCents,
+                'at'          => time(),
+            ];
+            header('Location: ' . url_lang('/checkout') . '?variety=' . rawurlencode($varietyUrl), true, 303);
+            exit;
+        }
+
+        if ($o['payment'] !== 'card' || !self::ALLOW_CARD_CHECKOUT) {
+            $this->flashCheckoutValidation(
+                $o,
+                ['payment' => 'checkout.field_error_payment_transfer'],
+                $varietyUrl,
+                Lang::t('checkout.error_payment_transfer'),
+            );
+        }
 
         try {
             $created = Order::createPending(
@@ -1040,6 +1125,7 @@ final class CheckoutController extends BaseController
             'payValidateMsgsJson'   => '{}',
             'countryCodeSet'        => self::countryCodeSet(),
             'countryCodesOrdered'   => self::countryCodesOrderedByEnglishName(),
+            'transferReceipt'       => null,
         ]);
     }
 

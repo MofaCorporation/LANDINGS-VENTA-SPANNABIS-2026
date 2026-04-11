@@ -7,6 +7,8 @@ Este archivo es el **estado vivo** del proyecto para que Cursor (y humanos) no p
 
 **OBJ actual:** `OBJ-TIENDA-REDSYS`
 
+**Checkout transferencia (2026-04):** Pedidos con estado `pending_transfer`; TPV tarjeta desactivado vía `CheckoutController::ALLOW_CARD_CHECKOUT`. Antes de desplegar, aplicar `context/migration_orders_status_pending_transfer.sql` en MySQL. Datos IBAN en `src/Services/BankTransferDetails.php`.
+
 ---
 
 ## 1) Estado actual (rellenar con evidencia)

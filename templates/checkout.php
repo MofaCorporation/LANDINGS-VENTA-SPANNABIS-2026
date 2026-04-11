@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Lang\Lang;
+use App\Services\BankTransferDetails;
 
 /** @var array<string, mixed> $checkoutLine */
 /** @var string $variety */
@@ -20,7 +21,9 @@ use App\Lang\Lang;
 /** @var string $payValidateMsgsJson */
 /** @var array<string, true> $countryCodeSet */
 /** @var list<string> $countryCodesOrdered */
+/** @var array{order_ref: string, total_cents: int}|null $transferReceipt */
 
+$transferReceipt = $transferReceipt ?? null;
 $line            = $checkoutLine ?? [];
 $formError       = $formError ?? null;
 $redsysPayment   = $redsysPayment ?? null;
@@ -53,7 +56,7 @@ $shippingRatesUrl  = htmlspecialchars(url_lang('/checkout/shipping-rates'), ENT_
 
 $guestChecked = array_key_exists('guest', $checkoutOld) ? !empty($checkoutOld['guest']) : true;
 $shipStdOn    = ($checkoutOld['shipping'] ?? 'standard') !== 'pickup';
-$payCardOn    = ($checkoutOld['payment'] ?? 'card') === 'card';
+$payTransferOn = ($checkoutOld['payment'] ?? 'transfer') === 'transfer';
 
 $fe = static function (string $k) use ($checkoutFieldErrors): bool {
     return isset($checkoutFieldErrors[$k]);
@@ -67,13 +70,32 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
     <a class="checkout-logo" href="<?= htmlspecialchars(url_lang('/'), ENT_QUOTES, 'UTF-8') ?>" aria-label="<?= Lang::t('site.brand') ?>">
       <img class="checkout-logo__img" src="<?= htmlspecialchars($logoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" width="1024" height="1024" decoding="async">
     </a>
-    <h1 class="checkout-title"><?= Lang::t('checkout.heading') ?></h1>
+    <h1 class="checkout-title"><?= ($transferReceipt !== null) ? Lang::t('checkout.transfer_heading') : Lang::t('checkout.heading') ?></h1>
     <a class="checkout-lang" href="<?= $langHref ?>"><?= Lang::t('nav.lang_switch') ?></a>
   </div>
 </header>
 
 <div class="checkout-wrap">
-  <?php if ($redsysPayment !== null && $redsysUrl !== null) : ?>
+  <?php if ($transferReceipt !== null) :
+      $trRef = htmlspecialchars($transferReceipt['order_ref'], ENT_QUOTES, 'UTF-8');
+      $trAmt = htmlspecialchars(format_price_cents((int) $transferReceipt['total_cents']), ENT_QUOTES, 'UTF-8');
+      ?>
+    <div class="tf-card checkout-transfer-receipt" role="region" aria-labelledby="transfer-receipt-title">
+      <h2 class="tf-section-title" id="transfer-receipt-title"><?= Lang::t('checkout.transfer_receipt_title') ?></h2>
+      <p class="checkout-transfer-receipt__lead"><?= Lang::t('checkout.transfer_receipt_lead') ?></p>
+      <p class="checkout-transfer-receipt__email-note"><?= Lang::t('checkout.transfer_receipt_email_note') ?></p>
+      <div class="checkout-bank-box">
+        <p class="checkout-bank-line"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_holder') ?></span> <?= htmlspecialchars(BankTransferDetails::HOLDER, ENT_QUOTES, 'UTF-8') ?></p>
+        <p class="checkout-bank-line"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_iban') ?></span> <?= htmlspecialchars(BankTransferDetails::IBAN, ENT_QUOTES, 'UTF-8') ?></p>
+        <p class="checkout-bank-line"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_bic') ?></span> <?= htmlspecialchars(BankTransferDetails::BIC, ENT_QUOTES, 'UTF-8') ?></p>
+        <p class="checkout-bank-line checkout-bank-line--amount"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_amount') ?></span> <strong><?= $trAmt ?></strong></p>
+        <p class="checkout-bank-line checkout-bank-line--concept"><span class="checkout-bank-label"><?= Lang::t('checkout.bank_concept') ?></span> <code class="checkout-bank-concept"><?= $trRef ?></code></p>
+      </div>
+      <p class="checkout-transfer-receipt__order"><?= Lang::t('checkout.transfer_order_ref_label') ?> <strong>#<?= $trRef ?></strong></p>
+      <p class="hint"><?= Lang::t('checkout.transfer_receipt_hint') ?></p>
+      <p class="checkout-transfer-receipt__cta"><a class="checkout-lang" href="<?= htmlspecialchars(url_lang('/'), ENT_QUOTES, 'UTF-8') ?>"><?= Lang::t('checkout.transfer_back_home') ?></a></p>
+    </div>
+  <?php elseif ($redsysPayment !== null && $redsysUrl !== null) : ?>
     <div class="tf-card checkout-redirect-card">
       <p class="tf-section-title" style="margin-bottom:0.75rem"><?= Lang::t('checkout.redirect_notice') ?></p>
       <p><?= Lang::t('checkout.secure_note') ?></p>
@@ -290,21 +312,29 @@ $feMsg = static function (string $k) use ($checkoutFieldErrors): string {
       <section class="tf-card<?= $fe('payment') ? ' tf-card--invalid' : '' ?>" id="checkout-section-pay" aria-labelledby="sec-pay">
         <h2 class="tf-section-title" id="sec-pay"><?= Lang::t('checkout.section_payment') ?></h2>
         <div class="pay-options" data-checkout-field="payment">
-          <label class="opt">
+          <label class="opt opt--disabled" aria-disabled="true">
             <div class="opt__main">
-              <input type="radio" name="payment" value="card" data-checkout-pay-card<?= $payCardOn ? ' checked' : '' ?>>
+              <input type="radio" name="payment" value="card" data-checkout-pay-card disabled>
               <span><?= Lang::t('checkout.pay_card') ?></span>
             </div>
+            <span class="opt__badge"><?= Lang::t('checkout.pay_card_unavailable') ?></span>
           </label>
           <label class="opt">
             <div class="opt__main">
-              <input type="radio" name="payment" value="transfer" data-checkout-pay-transfer<?= $payCardOn ? '' : ' checked' ?>>
+              <input type="radio" name="payment" value="transfer" data-checkout-pay-transfer<?= $payTransferOn ? ' checked' : '' ?> required>
               <span><?= Lang::t('checkout.pay_transfer') ?></span>
             </div>
           </label>
+          <div class="opt opt--disabled" aria-disabled="true">
+            <div class="opt__main">
+              <input type="radio" name="payment" value="bizum" data-checkout-pay-bizum disabled tabindex="-1">
+              <span><?= Lang::t('checkout.pay_bizum') ?></span>
+            </div>
+            <span class="opt__badge"><?= Lang::t('checkout.pay_soon') ?></span>
+          </div>
         </div>
         <p class="field-error-msg field-error-msg--block" id="checkout-err-payment" role="alert"<?= $fe('payment') ? '' : ' hidden' ?>><?= $fe('payment') ? $feMsg('payment') : '' ?></p>
-        <p class="secure-hint"><?= Lang::t('checkout.pay_secure_hint') ?></p>
+        <p class="secure-hint"><?= Lang::t('checkout.pay_secure_hint_no_tpv') ?></p>
       </section>
 
       <div class="tf-card checkout-cta-mobile-wrap">

@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS orders (
     product_id      INT UNSIGNED NOT NULL,
     amount_cents    INT UNSIGNED NOT NULL,
     currency        CHAR(3) DEFAULT 'EUR',
-    status          ENUM('pending','paid','failed','refunded') DEFAULT 'pending',
+    status          ENUM('pending','pending_transfer','paid','failed','refunded') DEFAULT 'pending',
     customer_name   VARCHAR(200) DEFAULT NULL,
     customer_email  VARCHAR(254),
     shipping_json   JSON,
