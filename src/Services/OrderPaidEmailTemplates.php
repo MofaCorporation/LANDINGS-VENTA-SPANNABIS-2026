@@ -338,7 +338,7 @@ final class OrderPaidEmailTemplates
         $trackBlockTxt  = '';
         $tn = $trackingNumber !== null ? trim($trackingNumber) : '';
         if ($tn !== '') {
-            $trackUrl = 'https://tracking.packlink.com/' . rawurlencode($tn);
+            $trackUrl = 'https://www.packlink.es/seguimiento/?reference=' . rawurlencode($tn);
             $lblTrack = $lang === 'en' ? 'Tracking number' : 'Número de seguimiento';
             $lblFollow = $lang === 'en' ? 'Track shipment' : 'Seguir envío';
             $lblPdf    = $lang === 'en' ? 'Download shipping label (PDF)' : 'Descargar etiqueta de envío (PDF)';

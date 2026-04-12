@@ -42,7 +42,10 @@ if (isset($ship['total_cents'])) {
 
 $showManualTracking = $mode === 'standard' && ($st === 'paid' || ($st === 'shipped' && $tn === ''));
 
-$trackFollowUrl = $tn !== '' ? 'https://tracking.packlink.com/' . rawurlencode($tn) : '';
+// Seguimiento público Packlink Pro (doc. oficial ES): …/seguimiento/?reference=
+$trackFollowUrl = $tn !== ''
+    ? 'https://www.packlink.es/seguimiento/?reference=' . rawurlencode($tn)
+    : '';
 ?>
 <!DOCTYPE html>
 <html lang="<?= htmlspecialchars($lang, ENT_QUOTES, 'UTF-8') ?>">
