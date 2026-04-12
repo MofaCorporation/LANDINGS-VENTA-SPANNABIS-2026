@@ -88,6 +88,20 @@ final class AdminController
             return;
         }
 
+        if (preg_match('#^/admin/orders/([^/]+)/tracking$#', $path, $m) === 1 && strtoupper($method) === 'POST') {
+            $this->requireAuth();
+            $this->trackingManualPost($m[1]);
+
+            return;
+        }
+
+        if (preg_match('#^/admin/orders/([^/]+)$#', $path, $m) === 1 && strtoupper($method) === 'GET') {
+            $this->requireAuth();
+            $this->orderDetailGet($m[1]);
+
+            return;
+        }
+
         http_response_code(404);
         require dirname(__DIR__, 2) . '/templates/404.php';
     }
@@ -239,8 +253,85 @@ final class AdminController
             OrderPostPaidActions::afterManualTransferPaid($after);
         }
 
-        $_SESSION['admin_flash_ok'] = 'Pago confirmado para el pedido #' . $orderRef . '. Se ha notificado al cliente.';
-        header('Location: ' . $this->adminBasePath() . '/orders', true, 302);
+        $_SESSION['admin_flash_ok'] = 'Pedido #' . $orderRef . ' confirmado: pago registrado, envío y correo al cliente procesados cuando aplica.';
+        header('Location: ' . $this->adminBasePath() . '/orders/' . rawurlencode($orderRef), true, 302);
+        exit;
+    }
+
+    private function orderDetailGet(string $orderRef): void
+    {
+        $orderRef = trim($orderRef);
+        if ($orderRef === '') {
+            http_response_code(404);
+            require dirname(__DIR__, 2) . '/templates/404.php';
+
+            return;
+        }
+
+        $order = Order::getForEmail($orderRef);
+        if ($order === null) {
+            http_response_code(404);
+            require dirname(__DIR__, 2) . '/templates/404.php';
+
+            return;
+        }
+
+        $flashOk = isset($_SESSION['admin_flash_ok']) ? (string) $_SESSION['admin_flash_ok'] : '';
+        unset($_SESSION['admin_flash_ok']);
+        $flashErr = isset($_SESSION['admin_flash_err']) ? (string) $_SESSION['admin_flash_err'] : '';
+        unset($_SESSION['admin_flash_err']);
+
+        require dirname(__DIR__, 2) . '/templates/admin/order_detail.php';
+    }
+
+    private function trackingManualPost(string $orderRef): void
+    {
+        if (!admin_verify_csrf((string) ($_POST['csrf'] ?? ''))) {
+            $_SESSION['admin_flash_err'] = 'Token de seguridad inválido.';
+            header('Location: ' . $this->adminBasePath() . '/orders/' . rawurlencode(trim($orderRef)), true, 302);
+            exit;
+        }
+
+        $orderRef = trim($orderRef);
+        if ($orderRef === '') {
+            $_SESSION['admin_flash_err'] = 'Referencia inválida.';
+            header('Location: ' . $this->adminBasePath() . '/orders', true, 302);
+            exit;
+        }
+
+        $order = Order::getForEmail($orderRef);
+        if ($order === null) {
+            $_SESSION['admin_flash_err'] = 'Pedido no encontrado.';
+            header('Location: ' . $this->adminBasePath() . '/orders', true, 302);
+            exit;
+        }
+
+        $ship = $order['shipping'] ?? [];
+        $mode = is_array($ship) ? (string) ($ship['shipping'] ?? '') : '';
+        if ($mode === 'pickup') {
+            $_SESSION['admin_flash_err'] = 'Recogida en tienda: no aplica tracking de envío.';
+            header('Location: ' . $this->adminBasePath() . '/orders/' . rawurlencode($orderRef), true, 302);
+            exit;
+        }
+
+        $st = (string) ($order['status'] ?? '');
+        if ($st !== 'paid' && $st !== 'shipped') {
+            $_SESSION['admin_flash_err'] = 'Solo se puede añadir tracking en pedidos pagados o enviados.';
+            header('Location: ' . $this->adminBasePath() . '/orders/' . rawurlencode($orderRef), true, 302);
+            exit;
+        }
+
+        $tracking = trim((string) ($_POST['tracking_number'] ?? ''));
+        $labelUrl = trim((string) ($_POST['label_url'] ?? ''));
+
+        if (!Order::saveManualTracking($orderRef, $tracking, $labelUrl !== '' ? $labelUrl : null)) {
+            $_SESSION['admin_flash_err'] = 'No se pudo guardar el tracking (¿número vacío o pedido no válido?).';
+            header('Location: ' . $this->adminBasePath() . '/orders/' . rawurlencode($orderRef), true, 302);
+            exit;
+        }
+
+        $_SESSION['admin_flash_ok'] = 'Tracking guardado correctamente.';
+        header('Location: ' . $this->adminBasePath() . '/orders/' . rawurlencode($orderRef), true, 302);
         exit;
     }
 }

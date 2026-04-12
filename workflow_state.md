@@ -13,6 +13,8 @@ Este archivo es el **estado vivo** del proyecto para que Cursor (y humanos) no p
 
 **Hardening admin (2026-04):** Cabeceras `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Cache-Control: no-store` en todas las respuestas `/admin/*`; CSRF en `POST /admin` y `POST .../confirm`; sesión admin con `session_regenerate_id` al entrar, expiración por inactividad (2 h), renovación de `admin_last_activity` en cada request autenticado; logout purga claves `admin_*` + regenera id (no se usa `session_destroy()` global para no vaciar carrito checkout en la misma cookie). Antibruto: 5 fallos → bloqueo 15 min por IP en archivos bajo `sys_get_temp_dir()/tarumba-admin-login/` (`AdminLoginRateLimiter`).
 
+**Packlink + tracking (2026-04):** Antes de desplegar, aplicar `context/migrations/20260412_orders_tracking_packlink.sql` (columnas `tracking_number`, `label_url`, `packlink_error`; estado `shipped`). Tras pago (Redsys o confirmación admin) se intenta `POST /v1/shipments` con origen Barcelona / Calle Tennis 1 / 08773 / ES, paquete 0,15 kg 15×10×5 cm y `service_id` desde `shipping_json.packlink_service_id` (checkout rellena la clave). Si Packlink falla, el pedido queda `paid` y el error en `packlink_error`; el detalle admin (`GET /admin/orders/{ref}`) permite tracking manual. El cuerpo JSON exacto puede requerir ajuste según la cuenta Packlink Pro.
+
 ---
 
 ## 1) Estado actual (rellenar con evidencia)

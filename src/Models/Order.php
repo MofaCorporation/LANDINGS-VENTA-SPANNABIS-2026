@@ -202,6 +202,9 @@ final class Order
                 o.customer_name,
                 o.customer_email,
                 o.shipping_json,
+                o.tracking_number,
+                o.label_url,
+                o.packlink_error,
                 p.name_es,
                 p.name_en,
                 p.slug_es,
@@ -226,19 +229,81 @@ final class Order
         }
 
         return [
-            'order_ref'      => (string) $row['order_ref'],
-            'status'         => (string) $row['status'],
-            'amount_cents'   => (int) $row['amount_cents'],
-            'customer_name'  => isset($row['customer_name']) ? (string) $row['customer_name'] : null,
-            'customer_email' => isset($row['customer_email']) ? (string) $row['customer_email'] : null,
-            'shipping'       => $shipping,
-            'product'        => [
+            'order_ref'        => (string) $row['order_ref'],
+            'status'           => (string) $row['status'],
+            'amount_cents'     => (int) $row['amount_cents'],
+            'customer_name'    => isset($row['customer_name']) ? (string) $row['customer_name'] : null,
+            'customer_email'   => isset($row['customer_email']) ? (string) $row['customer_email'] : null,
+            'shipping'         => $shipping,
+            'tracking_number'  => isset($row['tracking_number']) && $row['tracking_number'] !== null ? (string) $row['tracking_number'] : null,
+            'label_url'        => isset($row['label_url']) && $row['label_url'] !== null ? (string) $row['label_url'] : null,
+            'packlink_error'   => isset($row['packlink_error']) && $row['packlink_error'] !== null ? (string) $row['packlink_error'] : null,
+            'product'          => [
                 'name_es' => (string) $row['name_es'],
                 'name_en' => (string) $row['name_en'],
                 'slug_es' => (string) $row['slug_es'],
                 'slug_en' => (string) $row['slug_en'],
             ],
         ];
+    }
+
+    public static function saveTrackingAndLabel(string $orderRef, ?string $trackingNumber, ?string $labelUrl): void
+    {
+        $pdo = Database::get();
+        $st  = $pdo->prepare(
+            'UPDATE orders SET tracking_number = :tn, label_url = :lu WHERE order_ref = :r',
+        );
+        $st->execute([
+            'tn' => $trackingNumber !== null && $trackingNumber !== '' ? $trackingNumber : null,
+            'lu' => $labelUrl !== null && $labelUrl !== '' ? $labelUrl : null,
+            'r'  => $orderRef,
+        ]);
+    }
+
+    public static function setPacklinkError(string $orderRef, ?string $message): void
+    {
+        $pdo = Database::get();
+        $msg = $message !== null ? mb_substr(trim($message), 0, 500) : null;
+        $st  = $pdo->prepare('UPDATE orders SET packlink_error = :e WHERE order_ref = :r');
+        $st->execute(['e' => $msg !== '' ? $msg : null, 'r' => $orderRef]);
+    }
+
+    /** Pasa de `paid` a `shipped` (idempotente si ya está `shipped`). */
+    public static function markAsShipped(string $orderRef): bool
+    {
+        $pdo = Database::get();
+        $st  = $pdo->prepare(
+            "UPDATE orders SET status = 'shipped' WHERE order_ref = :r AND status IN ('paid', 'shipped')",
+        );
+        $st->execute(['r' => $orderRef]);
+
+        return $st->rowCount() > 0;
+    }
+
+    /**
+     * Tracking manual desde el panel (pedido pagado, envío estándar).
+     *
+     * @return bool true si se actualizó la fila
+     */
+    public static function saveManualTracking(string $orderRef, string $trackingNumber, ?string $labelUrl): bool
+    {
+        $trackingNumber = trim($trackingNumber);
+        if ($trackingNumber === '') {
+            return false;
+        }
+
+        $pdo = Database::get();
+        $st  = $pdo->prepare(
+            'UPDATE orders SET tracking_number = :tn, label_url = :lu, packlink_error = NULL, status = \'shipped\'
+             WHERE order_ref = :r AND status IN (\'paid\', \'shipped\') AND shipping_json IS NOT NULL',
+        );
+        $st->execute([
+            'tn' => mb_substr($trackingNumber, 0, 100),
+            'lu' => $labelUrl !== null && trim($labelUrl) !== '' ? mb_substr(trim($labelUrl), 0, 500) : null,
+            'r'  => $orderRef,
+        ]);
+
+        return $st->rowCount() > 0;
     }
 
     /**
@@ -250,11 +315,11 @@ final class Order
     {
         $pdo = Database::get();
         $sql = 'SELECT o.order_ref, o.created_at, o.status, o.amount_cents, o.customer_name, o.customer_email,
-                       o.shipping_json, p.slug_es, p.name_es
+                       o.shipping_json, o.tracking_number, o.label_url, o.packlink_error, p.slug_es, p.name_es
                 FROM orders o
                 INNER JOIN products p ON p.id = o.product_id';
         $params = [];
-        $forUi = ['pending_transfer', 'paid', 'failed'];
+        $forUi = ['pending_transfer', 'paid', 'failed', 'shipped'];
         if ($statusFilter !== null && $statusFilter !== '' && $statusFilter !== 'all' && in_array($statusFilter, $forUi, true)) {
             $sql .= ' WHERE o.status = :st';
             $params['st'] = $statusFilter;

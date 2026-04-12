@@ -39,12 +39,15 @@ CREATE TABLE IF NOT EXISTS orders (
     product_id      INT UNSIGNED NOT NULL,
     amount_cents    INT UNSIGNED NOT NULL,
     currency        CHAR(3) DEFAULT 'EUR',
-    status          ENUM('pending','pending_transfer','paid','failed','refunded') DEFAULT 'pending',
+    status          ENUM('pending','pending_transfer','paid','failed','refunded','shipped') DEFAULT 'pending',
     customer_name   VARCHAR(200) DEFAULT NULL,
     customer_email  VARCHAR(254),
     shipping_json   JSON,
     redsys_response JSON,
     paid_at         DATETIME,
+    tracking_number VARCHAR(100) DEFAULT NULL,
+    label_url       VARCHAR(500) DEFAULT NULL,
+    packlink_error  VARCHAR(500) DEFAULT NULL,
     created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );

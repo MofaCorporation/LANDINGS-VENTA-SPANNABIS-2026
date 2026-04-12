@@ -48,6 +48,7 @@ $statusClass = static function (string $st): string {
     return match ($st) {
         'pending_transfer' => 'st-pending',
         'paid'             => 'st-paid',
+        'shipped'          => 'st-shipped',
         'failed'           => 'st-failed',
         default            => 'st-other',
     };
@@ -166,6 +167,7 @@ $statusClass = static function (string $st): string {
     }
     .st-pending { background: rgba(245, 208, 0, 0.25); color: var(--tf-warn); }
     .st-paid { background: rgba(50, 200, 80, 0.2); color: #7dff9a; }
+    .st-shipped { background: rgba(100, 220, 255, 0.18); color: #9aebff; }
     .st-failed { background: rgba(255, 77, 77, 0.2); color: var(--tf-bad); }
     .st-other { background: #333; color: #ccc; }
     form.inline { margin: 0; display: inline; }
@@ -218,6 +220,7 @@ $statusClass = static function (string $st): string {
             'all'               => 'Todos',
             'pending_transfer'  => 'Pendiente transferencia',
             'paid'              => 'Pagado',
+            'shipped'           => 'Enviado',
             'failed'            => 'Fallido',
         ];
         foreach ($opts as $val => $label) {
@@ -266,7 +269,7 @@ $statusClass = static function (string $st): string {
             }
             ?>
           <tr>
-            <td class="ref">#<?= htmlspecialchars($ref, ENT_QUOTES, 'UTF-8') ?></td>
+            <td class="ref"><a href="<?= htmlspecialchars($bp . '/' . $lang . '/admin/orders/' . rawurlencode($ref), ENT_QUOTES, 'UTF-8') ?>" style="color:var(--tf-green);font-weight:700">#<?= htmlspecialchars($ref, ENT_QUOTES, 'UTF-8') ?></a></td>
             <td><?= htmlspecialchars($created, ENT_QUOTES, 'UTF-8') ?></td>
             <td><?= htmlspecialchars($name !== '' ? $name : '—', ENT_QUOTES, 'UTF-8') ?></td>
             <td><?= htmlspecialchars($email !== '' ? $email : '—', ENT_QUOTES, 'UTF-8') ?></td>

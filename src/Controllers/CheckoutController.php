@@ -924,14 +924,40 @@ final class CheckoutController extends BaseController
             $subtotal += (int) ($row['subtotal'] ?? 0);
         }
 
-        // Envío seleccionado via Packlink: validar contra quote en sesión (no confiar en el cliente).
-        $shipCents = 0;
+        // Envío Packlink (estándar): cotización en sesión. Recogida: sin Packlink.
+        $shipCents         = 0;
+        $packlinkServiceId = '';
         $quoteKey = isset($_POST['shipping_quote_key']) && is_string($_POST['shipping_quote_key']) ? trim($_POST['shipping_quote_key']) : '';
         $optId    = isset($_POST['shipping_option_id']) && is_string($_POST['shipping_option_id']) ? trim($_POST['shipping_option_id']) : '';
 
         $free = $subtotal >= self::FREE_SHIPPING_SUBTOTAL_CENTS;
-        if ($free) {
+
+        if ($shipping === 'pickup') {
             $shipCents = 0;
+        } elseif ($free) {
+            $shipCents = 0;
+            $q = $this->readPacklinkQuote();
+            if ($q !== null && $quoteKey !== '' && $optId !== '' && (string) ($q['quote_key'] ?? '') === $quoteKey) {
+                $opts = $q['options'] ?? null;
+                if (is_array($opts)) {
+                    foreach ($opts as $r) {
+                        if (is_array($r) && isset($r['id']) && (string) $r['id'] === $optId) {
+                            $packlinkServiceId = (string) $r['id'];
+                            break;
+                        }
+                    }
+                }
+            }
+            if ($packlinkServiceId === '' && $country !== '' && $postal !== '') {
+                try {
+                    $plSvc = new PacklinkService(PacklinkService::loadConfig());
+                    $rates = $plSvc->getShippingRates($country, (int) $postal);
+                    if ($rates !== []) {
+                        $packlinkServiceId = (string) ($rates[0]['id'] ?? '');
+                    }
+                } catch (\Throwable) {
+                }
+            }
         } else {
             $q = $this->readPacklinkQuote();
             if ($q === null || $quoteKey === '' || $optId === '' || (string) ($q['quote_key'] ?? '') !== $quoteKey) {
@@ -957,6 +983,7 @@ final class CheckoutController extends BaseController
             if ($shipCents < 0) {
                 $shipCents = 0;
             }
+            $packlinkServiceId = (string) ($matched['id'] ?? '');
         }
 
         $totalCents = $subtotal + $shipCents;
@@ -992,9 +1019,10 @@ final class CheckoutController extends BaseController
             'phone'            => $phone,
             'guest'            => $guest,
             'create_account'   => $createAccount,
-            'subtotal_cents'   => $subtotal,
-            'shipping_cents'   => $shipCents,
-            'total_cents'      => $totalCents,
+            'subtotal_cents'      => $subtotal,
+            'shipping_cents'      => $shipCents,
+            'total_cents'         => $totalCents,
+            'packlink_service_id' => $packlinkServiceId,
         ];
 
         $shippingJson = json_encode(
