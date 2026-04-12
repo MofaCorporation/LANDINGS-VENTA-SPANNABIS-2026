@@ -71,3 +71,46 @@ function checkout_verify_csrf(string $token): bool
 
     return $expected !== '' && hash_equals($expected, $token);
 }
+
+function admin_csrf_token(): string
+{
+    if (empty($_SESSION['csrf_admin'])) {
+        $_SESSION['csrf_admin'] = bin2hex(random_bytes(16));
+    }
+
+    return $_SESSION['csrf_admin'];
+}
+
+function admin_verify_csrf(string $token): bool
+{
+    $expected = $_SESSION['csrf_admin'] ?? '';
+
+    return $expected !== '' && hash_equals($expected, $token);
+}
+
+/** @return array{username: string, password_hash: string} */
+function admin_config(): array
+{
+    static $cached = null;
+    if ($cached !== null) {
+        return $cached;
+    }
+
+    $root     = dirname(__DIR__, 2);
+    $primary  = $root . '/config/admin.php';
+    $fallback = $root . '/config/admin.default.php';
+
+    $cfg = is_readable($primary) ? require $primary : (is_readable($fallback) ? require $fallback : []);
+    if (!is_array($cfg)) {
+        $cfg = [];
+    }
+
+    $username = isset($cfg['username']) && is_string($cfg['username']) && $cfg['username'] !== ''
+        ? $cfg['username']
+        : 'admin';
+    $hash = isset($cfg['password_hash']) && is_string($cfg['password_hash']) ? trim($cfg['password_hash']) : '';
+
+    $cached = ['username' => $username, 'password_hash' => $hash];
+
+    return $cached;
+}

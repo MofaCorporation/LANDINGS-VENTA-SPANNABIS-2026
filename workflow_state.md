@@ -9,6 +9,8 @@ Este archivo es el **estado vivo** del proyecto para que Cursor (y humanos) no p
 
 **Checkout transferencia (2026-04):** Pedidos con estado `pending_transfer`; TPV tarjeta desactivado vía `CheckoutController::ALLOW_CARD_CHECKOUT`. Antes de desplegar, aplicar `context/migration_orders_status_pending_transfer.sql` en MySQL. Datos IBAN en `src/Services/BankTransferDetails.php`.
 
+**Panel admin pedidos (2026-04):** Rutas bajo `/drops/es/admin` (tras `BASE_PATH` + idioma): login (`GET/POST /admin`), listado (`GET /admin/orders`), confirmar transferencia (`POST /admin/orders/{ref}/confirm`), logout (`GET /admin/logout`). Credenciales: copiar `config/admin.default.php` → `config/admin.php` (ignorado en git) y definir `password_hash` vía `password_hash()`. Tras pago Redsys o confirmación manual se actualiza `EGG_TYPE` en Brevo vía `BrevoContactService` (mapeo variedad → glazed/holy/nitro/party/radioactive).
+
 ---
 
 ## 1) Estado actual (rellenar con evidencia)

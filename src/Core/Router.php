@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Controllers\AdminController;
 use App\Controllers\CheckoutController;
 use App\Controllers\HomeController;
 use App\Controllers\ProductController;
@@ -52,6 +53,12 @@ final class Router
         $path = '/' . implode('/', $routeParts);
         if ($path === '/') {
             (new HomeController())->index();
+            return;
+        }
+
+        if (str_starts_with($path, '/admin')) {
+            (new AdminController())->dispatch($path, strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+
             return;
         }
 

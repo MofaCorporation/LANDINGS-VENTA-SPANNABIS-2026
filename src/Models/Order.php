@@ -240,4 +240,31 @@ final class Order
             ],
         ];
     }
+
+    /**
+     * Listado para panel admin: más recientes primero.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public static function listForAdmin(?string $statusFilter): array
+    {
+        $pdo = Database::get();
+        $sql = 'SELECT o.order_ref, o.created_at, o.status, o.amount_cents, o.customer_name, o.customer_email,
+                       o.shipping_json, p.slug_es, p.name_es
+                FROM orders o
+                INNER JOIN products p ON p.id = o.product_id';
+        $params = [];
+        $forUi = ['pending_transfer', 'paid', 'failed'];
+        if ($statusFilter !== null && $statusFilter !== '' && $statusFilter !== 'all' && in_array($statusFilter, $forUi, true)) {
+            $sql .= ' WHERE o.status = :st';
+            $params['st'] = $statusFilter;
+        }
+        $sql .= ' ORDER BY o.created_at DESC';
+
+        $st = $pdo->prepare($sql);
+        $st->execute($params);
+
+        /** @var list<array<string, mixed>> */
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
