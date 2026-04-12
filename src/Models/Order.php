@@ -247,6 +247,10 @@ final class Order
         ];
     }
 
+    /**
+     * Persiste tracking y URL de etiqueta (Packlink u otro). Llamar antes de markAsShipped()
+     * cuando el envío ya tiene número de seguimiento.
+     */
     public static function saveTrackingAndLabel(string $orderRef, ?string $trackingNumber, ?string $labelUrl): void
     {
         $pdo = Database::get();
@@ -254,8 +258,8 @@ final class Order
             'UPDATE orders SET tracking_number = :tn, label_url = :lu WHERE order_ref = :r',
         );
         $st->execute([
-            'tn' => $trackingNumber !== null && $trackingNumber !== '' ? $trackingNumber : null,
-            'lu' => $labelUrl !== null && $labelUrl !== '' ? $labelUrl : null,
+            'tn' => $trackingNumber !== null && $trackingNumber !== '' ? mb_substr($trackingNumber, 0, 100) : null,
+            'lu' => $labelUrl !== null && $labelUrl !== '' ? mb_substr($labelUrl, 0, 500) : null,
             'r'  => $orderRef,
         ]);
     }
@@ -268,7 +272,10 @@ final class Order
         $st->execute(['e' => $msg !== '' ? $msg : null, 'r' => $orderRef]);
     }
 
-    /** Pasa de `paid` a `shipped` (idempotente si ya está `shipped`). */
+    /**
+     * Pasa de `paid` a `shipped` (idempotente si ya está `shipped`).
+     * No escribe tracking_number: usar saveTrackingAndLabel() en el mismo flujo.
+     */
     public static function markAsShipped(string $orderRef): bool
     {
         $pdo = Database::get();

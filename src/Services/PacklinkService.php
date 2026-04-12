@@ -489,7 +489,9 @@ final class PacklinkService
     /** @param array<string, mixed> $raw */
     private function pickTrackingNumber(array $raw): string
     {
+        // Packlink Pro suele devolver el identificador de envío en `reference` (p. ej. 201 {"reference":"ES2026PRO..."}).
         $candidates = [
+            $raw['reference'] ?? null,
             $raw['tracking_number'] ?? null,
             $raw['trackingNumber'] ?? null,
             $raw['carrier_tracking_number'] ?? null,
@@ -498,6 +500,7 @@ final class PacklinkService
         ];
         if (isset($raw['shipment']) && is_array($raw['shipment'])) {
             $s = $raw['shipment'];
+            $candidates[] = $s['reference'] ?? null;
             $candidates[] = $s['tracking_number'] ?? null;
             $candidates[] = $s['tracking'] ?? null;
         }
