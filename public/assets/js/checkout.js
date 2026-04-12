@@ -182,15 +182,53 @@ if (layout && mainForm) {
 
   function readPayMsgs() {
     const el = document.getElementById('checkout-pay-validate-msgs');
-    if (!el?.textContent) {
+    const raw = el?.textContent != null ? String(el.textContent).trim() : '';
+    if (!raw) {
       return {};
     }
     try {
-      const o = JSON.parse(el.textContent.trim());
+      const o = JSON.parse(raw);
       return o && typeof o === 'object' ? o : {};
     } catch {
       return {};
     }
+  }
+
+  /** Textos si el JSON embebido no trae las claves packlinkBadge* (parseo / orden DOM). */
+  const PACKLINK_BADGE_FALLBACK = {
+    es: {
+      best_price: 'MEJOR PRECIO',
+      standard: 'ESTÁNDAR',
+      pickup_point: 'PUNTO DE RECOGIDA',
+      express: 'EXPRESS',
+    },
+    en: {
+      best_price: 'BEST PRICE',
+      standard: 'STANDARD',
+      pickup_point: 'PICKUP POINT',
+      express: 'EXPRESS',
+    },
+  };
+
+  const PACKLINK_BADGE_PROP = {
+    best_price: 'packlinkBadgeBestPrice',
+    standard: 'packlinkBadgeStandard',
+    pickup_point: 'packlinkBadgePickupPoint',
+    express: 'packlinkBadgeExpress',
+  };
+
+  function packlinkBadgeDisplayText(badgeKeyRaw, payMsgsMap) {
+    const k = badgeKeyRaw != null ? String(badgeKeyRaw).trim() : '';
+    if (!k || !Object.prototype.hasOwnProperty.call(PACKLINK_BADGE_PROP, k)) {
+      return '';
+    }
+    const prop = PACKLINK_BADGE_PROP[k];
+    const fromJson = payMsgsMap[prop];
+    if (fromJson != null && String(fromJson).trim() !== '') {
+      return String(fromJson).trim();
+    }
+    const lang = document.documentElement.lang === 'en' ? 'en' : 'es';
+    return PACKLINK_BADGE_FALLBACK[lang][k] || '';
   }
 
   const payMsgs = readPayMsgs();
@@ -217,12 +255,7 @@ if (layout && mainForm) {
     optionIdInput && (optionIdInput.value = defaultId);
     currentShipCents = Number(options[0]?.price_cents) || 0;
 
-    const badgeByKey = {
-      best_price: payMsgs.packlinkBadgeBestPrice,
-      standard: payMsgs.packlinkBadgeStandard,
-      pickup_point: payMsgs.packlinkBadgePickupPoint,
-      express: payMsgs.packlinkBadgeExpress,
-    };
+    const payMsgsForShip = readPayMsgs();
 
     const name = 'shipping_option_ui';
     options.forEach((opt, idx) => {
@@ -234,10 +267,10 @@ if (layout && mainForm) {
       const labelPrice = formatMoney(cents, locale);
       const labelDays = days ? (document.documentElement.lang === 'en' ? `${days} days` : `${days} días`) : '';
       const checked = idx === 0 ? ' checked' : '';
-      const bk = opt.badge_key != null ? String(opt.badge_key) : '';
-      const badgeText = bk && badgeByKey[bk] ? String(badgeByKey[bk]) : '';
+      const bk = opt.badge_key != null ? String(opt.badge_key) : (opt.badgeKey != null ? String(opt.badgeKey) : '');
+      const badgeText = packlinkBadgeDisplayText(bk, payMsgsForShip);
       const badgeHtml = badgeText
-        ? `<span class="opt__badge">${escapeHtml(badgeText)}</span>`
+        ? `<span class="opt__badge">${escapeHtml(`[${badgeText}]`)}</span>`
         : '';
 
       const row = document.createElement('label');
@@ -246,8 +279,10 @@ if (layout && mainForm) {
         <div class="opt__main">
           <input type="radio" name="${name}" value="${escapeHtml(id)}"${checked}>
           <span class="opt__body">
-            ${badgeHtml}
-            <span class="opt__label">${carrier} · ${service}${labelDays ? ` <small class="hint">(${labelDays})</small>` : ''}</span>
+            <span class="opt__row">
+              ${badgeHtml}
+              <span class="opt__label">${carrier} · ${service}${labelDays ? ` <small class="hint">(${labelDays})</small>` : ''}</span>
+            </span>
           </span>
         </div>
         <span class="opt__price">${escapeHtml(labelPrice)}</span>

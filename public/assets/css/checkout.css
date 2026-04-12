@@ -456,15 +456,23 @@ input:focus-visible {
 }
 
 .opt__body {
+  display: block;
+  min-width: 0;
+  flex: 1;
+}
+
+.opt__row {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.55rem;
   min-width: 0;
 }
 
 .opt__label {
   line-height: 1.35;
+  flex: 1;
+  min-width: 12ch;
 }
 
 .opt__price {
@@ -487,14 +495,19 @@ input:focus-visible {
 
 .opt__badge {
   flex-shrink: 0;
-  font-size: 0.7rem;
+  display: inline-block;
+  font-size: 0.68rem;
   font-weight: 800;
+  font-family: system-ui, sans-serif;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--tf-muted);
-  border: 1px solid var(--tf-border);
-  padding: 0.2rem 0.45rem;
-  background: #0a0a0a;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: #0a0a0a;
+  border: 1px solid var(--tf-pc, #a3ff12);
+  padding: 0.22rem 0.5rem;
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(163, 255, 18, 0.95) 0%, rgba(130, 210, 10, 0.92) 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
 .checkout-transfer-receipt {
