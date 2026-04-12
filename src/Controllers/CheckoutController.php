@@ -719,6 +719,10 @@ final class CheckoutController extends BaseController
     private function buildPayValidateMsgsJson(): string
     {
         $m = [
+            'packlinkBadgeBestPrice'   => Lang::raw('checkout.packlink_badge_best_price'),
+            'packlinkBadgeStandard'    => Lang::raw('checkout.packlink_badge_standard'),
+            'packlinkBadgePickupPoint' => Lang::raw('checkout.packlink_badge_pickup_point'),
+            'packlinkBadgeExpress'     => Lang::raw('checkout.packlink_badge_express'),
             'cartEmpty'         => Lang::raw('checkout.field_error_cart_empty'),
             'emailRequired'     => Lang::raw('checkout.field_required_email'),
             'emailInvalid'      => Lang::raw('checkout.field_invalid_email'),
@@ -1150,7 +1154,7 @@ final class CheckoutController extends BaseController
             'catalogJson'           => '[]',
             'checkoutOld'           => [],
             'checkoutFieldErrors'   => [],
-            'payValidateMsgsJson'   => '{}',
+            'payValidateMsgsJson'   => $this->buildPayValidateMsgsJson(),
             'countryCodeSet'        => self::countryCodeSet(),
             'countryCodesOrdered'   => self::countryCodesOrderedByEnglishName(),
             'transferReceipt'       => null,

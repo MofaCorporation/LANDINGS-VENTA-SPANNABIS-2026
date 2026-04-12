@@ -451,8 +451,20 @@ input:focus-visible {
 
 .opt__main {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.65rem;
+}
+
+.opt__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.opt__label {
+  line-height: 1.35;
 }
 
 .opt__price {

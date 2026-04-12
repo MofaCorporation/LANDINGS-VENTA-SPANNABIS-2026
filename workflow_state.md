@@ -15,6 +15,8 @@ Este archivo es el **estado vivo** del proyecto para que Cursor (y humanos) no p
 
 **Packlink + tracking (2026-04):** Antes de desplegar, aplicar `context/migrations/20260412_orders_tracking_packlink.sql` (columnas `tracking_number`, `label_url`, `packlink_error`; estado `shipped`). Tras pago (Redsys o confirmación admin) se intenta `POST /v1/shipments` con origen Barcelona / Calle Tennis 1 / 08773 / ES, paquete 0,15 kg 15×10×5 cm y `service_id` desde `shipping_json.packlink_service_id` (checkout rellena la clave). Si Packlink falla, el pedido queda `paid` y el error en `packlink_error`; el detalle admin (`GET /admin/orders/{ref}`) permite tracking manual. El cuerpo JSON exacto puede requerir ajuste según la cuenta Packlink Pro.
 
+**Cotización checkout Packlink (2026-04):** `PacklinkService::getShippingRates()` devuelve como máximo 4 servicios curados (mejor precio, estándar/`category===standard` o 2.º más barato si no hay estándar, punto de recogida si `delivery_to_parcelshop`, express por menor plazo), sin repetir `id`, orden UI fijo y `badge_key` + textos `checkout.packlink_badge_*` en ES/EN.
+
 ---
 
 ## 1) Estado actual (rellenar con evidencia)

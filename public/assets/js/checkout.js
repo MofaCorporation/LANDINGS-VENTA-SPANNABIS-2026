@@ -180,6 +180,21 @@ if (layout && mainForm) {
     return (s || '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   }
 
+  function readPayMsgs() {
+    const el = document.getElementById('checkout-pay-validate-msgs');
+    if (!el?.textContent) {
+      return {};
+    }
+    try {
+      const o = JSON.parse(el.textContent.trim());
+      return o && typeof o === 'object' ? o : {};
+    } catch {
+      return {};
+    }
+  }
+
+  const payMsgs = readPayMsgs();
+
   function renderShippingOptions(options, quoteKey) {
     if (!shipOptionsWrap) return;
     shipOptionsWrap.innerHTML = '';
@@ -197,10 +212,17 @@ if (layout && mainForm) {
     currentQuoteKey = quoteKey || '';
     if (quoteKeyInput) quoteKeyInput.value = currentQuoteKey;
 
-    // Seleccionar por defecto la primera (normalmente la más barata, viene ordenada por el backend)
+    // Primera opción: mejor precio (orden fijo backend: barato → estándar → recogida → express)
     const defaultId = options[0]?.id != null ? String(options[0].id) : '';
     optionIdInput && (optionIdInput.value = defaultId);
     currentShipCents = Number(options[0]?.price_cents) || 0;
+
+    const badgeByKey = {
+      best_price: payMsgs.packlinkBadgeBestPrice,
+      standard: payMsgs.packlinkBadgeStandard,
+      pickup_point: payMsgs.packlinkBadgePickupPoint,
+      express: payMsgs.packlinkBadgeExpress,
+    };
 
     const name = 'shipping_option_ui';
     options.forEach((opt, idx) => {
@@ -212,13 +234,21 @@ if (layout && mainForm) {
       const labelPrice = formatMoney(cents, locale);
       const labelDays = days ? (document.documentElement.lang === 'en' ? `${days} days` : `${days} días`) : '';
       const checked = idx === 0 ? ' checked' : '';
+      const bk = opt.badge_key != null ? String(opt.badge_key) : '';
+      const badgeText = bk && badgeByKey[bk] ? String(badgeByKey[bk]) : '';
+      const badgeHtml = badgeText
+        ? `<span class="opt__badge">${escapeHtml(badgeText)}</span>`
+        : '';
 
       const row = document.createElement('label');
       row.className = 'opt';
       row.innerHTML = `
         <div class="opt__main">
           <input type="radio" name="${name}" value="${escapeHtml(id)}"${checked}>
-          <span>${carrier} · ${service}${labelDays ? ` <small class="hint">(${labelDays})</small>` : ''}</span>
+          <span class="opt__body">
+            ${badgeHtml}
+            <span class="opt__label">${carrier} · ${service}${labelDays ? ` <small class="hint">(${labelDays})</small>` : ''}</span>
+          </span>
         </div>
         <span class="opt__price">${escapeHtml(labelPrice)}</span>
       `;
@@ -325,21 +355,6 @@ if (layout && mainForm) {
     }
     addForm.requestSubmit();
   });
-
-  function readPayMsgs() {
-    const el = document.getElementById('checkout-pay-validate-msgs');
-    if (!el?.textContent) {
-      return {};
-    }
-    try {
-      const o = JSON.parse(el.textContent.trim());
-      return o && typeof o === 'object' ? o : {};
-    } catch {
-      return {};
-    }
-  }
-
-  const payMsgs = readPayMsgs();
 
   function isEmailFormatOk(value) {
     const v = (value || '').trim();

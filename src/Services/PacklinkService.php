@@ -30,7 +30,7 @@ final class PacklinkService
     }
 
     /**
-     * @return list<array{carrier: string, service_name: string, price_cents: int, days: int|null, id: string}>
+     * @return list<array{carrier: string, service_name: string, price_cents: int, days: int|null, id: string, badge_key: string}>
      */
     public function getShippingRates(string $countryCode, int $postalCode): array
     {
@@ -107,7 +107,8 @@ final class PacklinkService
 
         $items = $this->coerceServicesList($raw);
 
-        $out = [];
+        /** @var list<array{id: string, carrier: string, service_name: string, price_cents: int, days: int|null, category: string, parcelshop: bool}> $internal */
+        $internal = [];
         foreach ($items as $item) {
             if (!is_array($item)) {
                 continue;
@@ -151,24 +152,160 @@ final class PacklinkService
                 $id = substr(hash('sha256', $carrier . '|' . $serviceName . '|' . (string) $priceCents . '|' . (string) ($days ?? '')), 0, 16);
             }
 
-            $out[] = [
+            $categoryRaw = $this->pickString($item, ['category', 'service_category']);
+            if ($categoryRaw === '' && isset($item['service']) && is_array($item['service'])) {
+                $categoryRaw = $this->pickString($item['service'], ['category', 'service_category']);
+            }
+            $category = strtolower(trim($categoryRaw));
+
+            $parcelshop = $this->pickBool($item, [
+                'delivery_to_parcelshop',
+                'deliveryToParcelshop',
+                'parcel_shop',
+                'ship_to_parcel_shop',
+                'to_parcelshop',
+            ], false);
+            if (!$parcelshop && isset($item['destination']) && is_array($item['destination'])) {
+                $parcelshop = $this->pickBool($item['destination'], ['parcel_shop', 'parcelShop', 'parcelshop'], false);
+            }
+
+            $internal[] = [
+                'id'           => $id,
                 'carrier'      => $carrier !== '' ? $carrier : '—',
                 'service_name' => $serviceName !== '' ? $serviceName : '—',
                 'price_cents'  => $priceCents,
                 'days'         => $days,
-                'id'           => $id,
+                'category'     => $category,
+                'parcelshop'   => $parcelshop,
             ];
         }
 
         usort(
-            $out,
+            $internal,
             static fn (array $a, array $b): int => ($a['price_cents'] <=> $b['price_cents']) ?: strcmp($a['carrier'] . $a['service_name'], $b['carrier'] . $b['service_name']),
         );
 
-        $out = array_values($out);
-        error_log('[Packlink] Mapped options: ' . json_encode($out, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+        $internal = array_values($internal);
+        error_log('[Packlink] Mapped options (full): ' . json_encode($internal, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+
+        $curated = $this->pickCuratedDisplayRates($internal);
+        error_log('[Packlink] Curated options: ' . json_encode($curated, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+
+        return $curated;
+    }
+
+    /**
+     * Hasta 4 opciones para el checkout: mejor precio, estándar, punto de recogida, express (más rápido).
+     * Sin repetir el mismo `id` entre categorías. Orden fijo para el UI.
+     *
+     * @param list<array{id: string, carrier: string, service_name: string, price_cents: int, days: int|null, category: string, parcelshop: bool}> $rows
+     *
+     * @return list<array{carrier: string, service_name: string, price_cents: int, days: int|null, id: string, badge_key: string}>
+     */
+    private function pickCuratedDisplayRates(array $rows): array
+    {
+        if ($rows === []) {
+            return [];
+        }
+
+        $sortPrice = static function (array $a, array $b): int {
+            $c = $a['price_cents'] <=> $b['price_cents'];
+            if ($c !== 0) {
+                return $c;
+            }
+
+            return strcmp($a['carrier'] . $a['service_name'], $b['carrier'] . $b['service_name']);
+        };
+
+        $byPrice = $rows;
+        usort($byPrice, $sortPrice);
+
+        $takeFirstNotChosen = static function (array $pool, array $chosen): ?array {
+            foreach ($pool as $r) {
+                if (!isset($chosen[$r['id']])) {
+                    return $r;
+                }
+            }
+
+            return null;
+        };
+
+        $chosen = [];
+        $out    = [];
+
+        $r = $takeFirstNotChosen($byPrice, $chosen);
+        if ($r === null) {
+            return [];
+        }
+        $out[] = $this->publicRateRow($r, 'best_price');
+        $chosen[$r['id']] = true;
+
+        $hasStandard = false;
+        foreach ($rows as $row) {
+            if (($row['category'] ?? '') === 'standard') {
+                $hasStandard = true;
+                break;
+            }
+        }
+
+        if ($hasStandard) {
+            $pool = array_values(array_filter($rows, static fn (array $x): bool => ($x['category'] ?? '') === 'standard'));
+            usort($pool, $sortPrice);
+        } else {
+            $pool = $byPrice;
+        }
+        $r = $takeFirstNotChosen($pool, $chosen);
+        if ($r !== null) {
+            $out[] = $this->publicRateRow($r, 'standard');
+            $chosen[$r['id']] = true;
+        }
+
+        $pool = array_values(array_filter($rows, static fn (array $x): bool => !empty($x['parcelshop'])));
+        usort($pool, $sortPrice);
+        $r = $takeFirstNotChosen($pool, $chosen);
+        if ($r !== null) {
+            $out[] = $this->publicRateRow($r, 'pickup_point');
+            $chosen[$r['id']] = true;
+        }
+
+        $pool = array_values(array_filter($rows, static fn (array $x): bool => !isset($chosen[$x['id']])));
+        usort(
+            $pool,
+            static function (array $a, array $b) use ($sortPrice): int {
+                $da = $a['days'] ?? PHP_INT_MAX;
+                $db = $b['days'] ?? PHP_INT_MAX;
+                $c  = $da <=> $db;
+                if ($c !== 0) {
+                    return $c;
+                }
+
+                return $sortPrice($a, $b);
+            },
+        );
+        $r = $takeFirstNotChosen($pool, $chosen);
+        if ($r !== null) {
+            $out[] = $this->publicRateRow($r, 'express');
+            $chosen[$r['id']] = true;
+        }
 
         return $out;
+    }
+
+    /**
+     * @param array{id: string, carrier: string, service_name: string, price_cents: int, days: int|null, category: string, parcelshop: bool} $row
+     *
+     * @return array{carrier: string, service_name: string, price_cents: int, days: int|null, id: string, badge_key: string}
+     */
+    private function publicRateRow(array $row, string $badgeKey): array
+    {
+        return [
+            'carrier'      => $row['carrier'],
+            'service_name' => $row['service_name'],
+            'price_cents'  => $row['price_cents'],
+            'days'         => $row['days'],
+            'id'           => $row['id'],
+            'badge_key'    => $badgeKey,
+        ];
     }
 
     /** @return mixed */
@@ -224,6 +361,33 @@ final class PacklinkService
         }
 
         return [];
+    }
+
+    private function pickBool(array $a, array $keys, bool $default = false): bool
+    {
+        foreach ($keys as $k) {
+            if (!array_key_exists($k, $a)) {
+                continue;
+            }
+            $v = $a[$k];
+            if (is_bool($v)) {
+                return $v;
+            }
+            if (is_int($v)) {
+                return $v !== 0;
+            }
+            if (is_string($v)) {
+                $t = strtolower(trim($v));
+                if ($t === '1' || $t === 'true' || $t === 'yes') {
+                    return true;
+                }
+                if ($t === '0' || $t === 'false' || $t === 'no') {
+                    return false;
+                }
+            }
+        }
+
+        return $default;
     }
 
     private function pickString(array $a, array $keys): string
