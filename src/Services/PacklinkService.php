@@ -412,12 +412,32 @@ final class PacklinkService
         $base = 'https://api.packlink.com';
         $url  = $base . '/v1/shipments';
 
+        $body = json_encode(
+            $payload,
+            JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE,
+        );
+
+        error_log('[Packlink createShipment] URL: ' . $url);
+        error_log('[Packlink createShipment] Body: ' . $body);
+
         try {
-            $raw = $this->httpPostJson($url, $payload);
+            [$httpCode, $response] = $this->httpPostShipmentRaw($url, $body);
         } catch (\Throwable $e) {
-            error_log('[Packlink] createShipment: ' . $e->getMessage());
+            error_log('[Packlink createShipment] Request error: ' . $e->getMessage());
 
             return $fail($e->getMessage());
+        }
+
+        error_log('[Packlink createShipment] Response code: ' . (string) $httpCode);
+        error_log('[Packlink createShipment] Response body: ' . $response);
+
+        if ($httpCode < 200 || $httpCode >= 300) {
+            return $fail('Packlink: HTTP ' . (string) $httpCode . ' — ' . mb_substr($response, 0, 500));
+        }
+
+        $raw = json_decode($response, true);
+        if ($raw === null && json_last_error() !== JSON_ERROR_NONE) {
+            return $fail('Packlink: JSON inválido en respuesta de envío.');
         }
 
         if (!is_array($raw)) {
@@ -542,24 +562,20 @@ final class PacklinkService
     }
 
     /**
-     * @param array<string, mixed> $payload
-     * @return mixed
+     * POST JSON ya serializado; devuelve [httpCode, bodyString].
+     *
+     * @return array{0: int, 1: string}
      */
-    private function httpPostJson(string $url, array $payload)
+    private function httpPostShipmentRaw(string $url, string $jsonBody): array
     {
         $ch = curl_init();
         if ($ch === false) {
             throw new \RuntimeException('Packlink: curl_init falló.');
         }
 
-        $body = json_encode(
-            $payload,
-            JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE,
-        );
-
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonBody);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 25);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
@@ -575,21 +591,11 @@ final class PacklinkService
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        error_log('[Packlink] createShipment HTTP ' . (string) $httpCode . ' body: ' . (string) ($resp === false ? '' : mb_substr((string) $resp, 0, 2000)));
-
         if ($resp === false) {
-            throw new \RuntimeException('Packlink: error HTTP: ' . ($err !== '' ? $err : 'desconocido'));
-        }
-        if ($httpCode < 200 || $httpCode >= 300) {
-            throw new \RuntimeException('Packlink: HTTP ' . (string) $httpCode . ' — ' . mb_substr((string) $resp, 0, 500));
+            throw new \RuntimeException('Packlink: error cURL: ' . ($err !== '' ? $err : 'desconocido'));
         }
 
-        $decoded = json_decode((string) $resp, true);
-        if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException('Packlink: JSON inválido en respuesta de envío.');
-        }
-
-        return $decoded;
+        return [$httpCode, (string) $resp];
     }
 }
 
