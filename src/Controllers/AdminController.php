@@ -6,19 +6,51 @@ namespace App\Controllers;
 
 use App\Lang\Lang;
 use App\Models\Order;
+use App\Security\AdminLoginRateLimiter;
 use App\Services\OrderPostPaidActions;
 
 final class AdminController
 {
     private const SESSION_KEY = 'admin_authenticated';
 
+    /** Inactividad máxima (segundos) antes de exigir login de nuevo. */
+    private const IDLE_SECONDS = 7200;
+
     private function adminBasePath(): string
     {
         return base_path() . '/' . Lang::current() . '/admin';
     }
 
+    private function sendAdminSecurityHeaders(): void
+    {
+        if (headers_sent()) {
+            return;
+        }
+        header('X-Frame-Options: DENY');
+        header('X-Content-Type-Options: nosniff');
+        header('Referrer-Policy: no-referrer');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+    }
+
+    /**
+     * Elimina todo el estado del panel admin en la sesión PHP sin destruir
+     * el resto (p. ej. carrito checkout en la misma cookie de sesión).
+     */
+    private function purgeAdminSessionState(): void
+    {
+        foreach (array_keys($_SESSION) as $k) {
+            if (str_starts_with((string) $k, 'admin_')) {
+                unset($_SESSION[$k]);
+            }
+        }
+        unset($_SESSION[self::SESSION_KEY], $_SESSION['csrf_admin']);
+    }
+
     public function dispatch(string $path, string $method): void
     {
+        $this->sendAdminSecurityHeaders();
+
         $path = '/' . trim($path, '/');
         if ($path === '') {
             $path = '/';
@@ -66,6 +98,19 @@ final class AdminController
             header('Location: ' . $this->adminBasePath(), true, 302);
             exit;
         }
+
+        $last = (int) ($_SESSION['admin_last_activity'] ?? 0);
+        if ($last <= 0 || (time() - $last) > self::IDLE_SECONDS) {
+            $this->purgeAdminSessionState();
+            if (!headers_sent()) {
+                session_regenerate_id(true);
+            }
+            $_SESSION['admin_login_error'] = 'Sesión caducada por inactividad. Vuelve a iniciar sesión.';
+            header('Location: ' . $this->adminBasePath(), true, 302);
+            exit;
+        }
+
+        $_SESSION['admin_last_activity'] = time();
     }
 
     private function loginGet(): void
@@ -89,19 +134,33 @@ final class AdminController
             exit;
         }
 
+        if (AdminLoginRateLimiter::isLocked()) {
+            $_SESSION['admin_login_error'] = 'Demasiados intentos fallidos. Espera unos minutos antes de volver a intentarlo.';
+            header('Location: ' . $this->adminBasePath(), true, 302);
+            exit;
+        }
+
         $cfg      = admin_config();
         $user     = trim((string) ($_POST['username'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
+        $hash     = trim($cfg['password_hash']);
 
-        $hash = $cfg['password_hash'];
-        if ($hash === '' || $user !== $cfg['username'] || !password_verify($password, $hash)) {
+        $validUser  = ($user === $cfg['username'] && $hash !== '');
+        $verifyHash = $validUser ? $hash : AdminLoginRateLimiter::dummyPasswordHash();
+        $passwordOk = password_verify($password, $verifyHash);
+
+        if (!$validUser || !$passwordOk) {
+            AdminLoginRateLimiter::recordFailure();
             $_SESSION['admin_login_error'] = 'Usuario o contraseña incorrectos.';
             header('Location: ' . $this->adminBasePath(), true, 302);
             exit;
         }
 
+        AdminLoginRateLimiter::clear();
+
         session_regenerate_id(true);
-        $_SESSION[self::SESSION_KEY] = true;
+        $_SESSION[self::SESSION_KEY]       = true;
+        $_SESSION['admin_last_activity']   = time();
 
         header('Location: ' . $this->adminBasePath() . '/orders', true, 302);
         exit;
@@ -109,7 +168,10 @@ final class AdminController
 
     private function logout(): void
     {
-        unset($_SESSION[self::SESSION_KEY], $_SESSION['csrf_admin']);
+        $this->purgeAdminSessionState();
+        if (!headers_sent()) {
+            session_regenerate_id(true);
+        }
         header('Location: ' . $this->adminBasePath(), true, 302);
         exit;
     }
@@ -128,9 +190,15 @@ final class AdminController
 
     private function confirmPost(string $orderRef): void
     {
+        if (!admin_verify_csrf((string) ($_POST['csrf'] ?? ''))) {
+            $_SESSION['admin_flash_err'] = 'No se pudo confirmar el pago (token de seguridad inválido).';
+            header('Location: ' . $this->adminBasePath() . '/orders', true, 302);
+            exit;
+        }
+
         $orderRef = trim($orderRef);
-        if ($orderRef === '' || !admin_verify_csrf((string) ($_POST['csrf'] ?? ''))) {
-            $_SESSION['admin_flash_err'] = 'No se pudo confirmar el pago (referencia o sesión inválida).';
+        if ($orderRef === '') {
+            $_SESSION['admin_flash_err'] = 'Referencia de pedido no válida.';
             header('Location: ' . $this->adminBasePath() . '/orders', true, 302);
             exit;
         }

@@ -11,6 +11,8 @@ Este archivo es el **estado vivo** del proyecto para que Cursor (y humanos) no p
 
 **Panel admin pedidos (2026-04):** Rutas bajo `/drops/es/admin` (tras `BASE_PATH` + idioma): login (`GET/POST /admin`), listado (`GET /admin/orders`), confirmar transferencia (`POST /admin/orders/{ref}/confirm`), logout (`GET /admin/logout`). Credenciales: copiar `config/admin.default.php` → `config/admin.php` (ignorado en git) y definir `password_hash` vía `password_hash()`. Tras pago Redsys o confirmación manual se actualiza `EGG_TYPE` en Brevo vía `BrevoContactService` (mapeo variedad → glazed/holy/nitro/party/radioactive).
 
+**Hardening admin (2026-04):** Cabeceras `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Cache-Control: no-store` en todas las respuestas `/admin/*`; CSRF en `POST /admin` y `POST .../confirm`; sesión admin con `session_regenerate_id` al entrar, expiración por inactividad (2 h), renovación de `admin_last_activity` en cada request autenticado; logout purga claves `admin_*` + regenera id (no se usa `session_destroy()` global para no vaciar carrito checkout en la misma cookie). Antibruto: 5 fallos → bloqueo 15 min por IP en archivos bajo `sys_get_temp_dir()/tarumba-admin-login/` (`AdminLoginRateLimiter`).
+
 ---
 
 ## 1) Estado actual (rellenar con evidencia)
