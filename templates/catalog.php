@@ -47,6 +47,17 @@ $catalogSwitchText    = $catalogTargetLang === 'en' ? 'ENGLISH' : 'ESPAÑOL';
             width: 100% !important; max-width: 100% !important; flex: 0 0 auto !important;
           }
         }
+        .catalog-secret-pepe {
+          display: inline-block;
+          max-width: 200px;
+          height: auto;
+          transition: transform 0.2s ease;
+          filter: drop-shadow(2px 2px 0 #000);
+          vertical-align: bottom;
+        }
+        a.catalog-secret-card:hover .catalog-secret-pepe {
+          transform: translateX(4px);
+        }
         </style>
 
         <div style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:700px;margin:0 auto;box-sizing:border-box;">
@@ -78,7 +89,9 @@ $catalogSwitchText    = $catalogTargetLang === 'en' ? 'ENGLISH' : 'ESPAÑOL';
                         <h2 style="margin:0;font-family:Bangers,'Segoe UI',Impact,sans-serif;font-size:clamp(1.35rem,3.5vw,2.35rem);font-weight:400;line-height:1;text-transform:uppercase;color:#a3ff12;"><?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?></h2>
                         <p style="margin:0.65rem 0 0;font-family:system-ui,-apple-system,sans-serif;font-size:0.9rem;font-weight:700;line-height:1.45;color:#e4e2e2;"><?= Lang::t($item['copy_key']) ?></p>
                     </div>
-                    <span style="display:block;box-sizing:border-box;margin-top:1.1rem;text-align:center;padding:0.65rem 0.75rem;border:3px solid #000;background:#a3ff12;color:#0e1a00;font-family:system-ui,-apple-system,sans-serif;font-size:0.72rem;font-weight:900;letter-spacing:0.05em;text-transform:uppercase;box-shadow:0 0 12px rgba(163,255,18,0.55),4px 4px 0 #000;"><?= Lang::t($item['cta_key']) ?></span>
+                    <span style="display:block;box-sizing:border-box;margin-top:1.1rem;text-align:center;line-height:0;">
+                        <img class="catalog-secret-pepe" src="<?= htmlspecialchars(asset_url('/assets/img/ui/pepe-espiando.png'), ENT_QUOTES, 'UTF-8') ?>" alt="<?= Lang::t($item['cta_key']) ?>" width="200" height="200" loading="lazy" decoding="async">
+                    </span>
                 </div>
             </a>
             <?php endforeach; ?>
