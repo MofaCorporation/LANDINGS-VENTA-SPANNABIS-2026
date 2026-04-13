@@ -202,7 +202,7 @@ $statusClass = static function (string $st): string {
     <header>
       <h1>Pedidos</h1>
       <div class="top-actions">
-        <a class="btn btn-primary" href="<?= htmlspecialchars($bp . '/' . $lang . '/admin/logout', ENT_QUOTES, 'UTF-8') ?>">Cerrar sesión</a>
+        <a class="btn btn-primary" href="<?= htmlspecialchars($bp . '/' . $lang . '/pepebulkov/logout', ENT_QUOTES, 'UTF-8') ?>">Cerrar sesión</a>
       </div>
     </header>
 
@@ -225,7 +225,7 @@ $statusClass = static function (string $st): string {
         ];
         foreach ($opts as $val => $label) {
             $on = ($filter === $val) ? ' on' : '';
-            $href = $bp . '/' . $lang . '/admin/orders' . ($val === 'all' ? '' : ('?status=' . rawurlencode($val)));
+            $href = $bp . '/' . $lang . '/pepebulkov/orders' . ($val === 'all' ? '' : ('?status=' . rawurlencode($val)));
             echo '<a class="' . trim($on) . '" href="' . htmlspecialchars($href, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</a>';
         }
       ?>
@@ -269,7 +269,7 @@ $statusClass = static function (string $st): string {
             }
             ?>
           <tr>
-            <td class="ref"><a href="<?= htmlspecialchars($bp . '/' . $lang . '/admin/orders/' . rawurlencode($ref), ENT_QUOTES, 'UTF-8') ?>" style="color:var(--tf-green);font-weight:700">#<?= htmlspecialchars($ref, ENT_QUOTES, 'UTF-8') ?></a></td>
+            <td class="ref"><a href="<?= htmlspecialchars($bp . '/' . $lang . '/pepebulkov/orders/' . rawurlencode($ref), ENT_QUOTES, 'UTF-8') ?>" style="color:var(--tf-green);font-weight:700">#<?= htmlspecialchars($ref, ENT_QUOTES, 'UTF-8') ?></a></td>
             <td><?= htmlspecialchars($created, ENT_QUOTES, 'UTF-8') ?></td>
             <td><?= htmlspecialchars($name !== '' ? $name : '—', ENT_QUOTES, 'UTF-8') ?></td>
             <td><?= htmlspecialchars($email !== '' ? $email : '—', ENT_QUOTES, 'UTF-8') ?></td>
@@ -286,7 +286,7 @@ $statusClass = static function (string $st): string {
             </td>
             <td>
               <?php if ($st === 'pending_transfer') { ?>
-                <form class="inline" method="post" action="<?= htmlspecialchars($bp . '/' . $lang . '/admin/orders/' . rawurlencode($ref) . '/confirm', ENT_QUOTES, 'UTF-8') ?>">
+                <form class="inline" method="post" action="<?= htmlspecialchars($bp . '/' . $lang . '/pepebulkov/orders/' . rawurlencode($ref) . '/confirm', ENT_QUOTES, 'UTF-8') ?>">
                   <input type="hidden" name="csrf" value="<?= htmlspecialchars(admin_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
                   <button class="confirm" type="submit">Confirmar pago</button>
                 </form>

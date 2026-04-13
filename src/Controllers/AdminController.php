@@ -18,7 +18,7 @@ final class AdminController
 
     private function adminBasePath(): string
     {
-        return base_path() . '/' . Lang::current() . '/admin';
+        return base_path() . '/' . Lang::current() . '/pepebulkov';
     }
 
     private function sendAdminSecurityHeaders(): void
@@ -56,46 +56,46 @@ final class AdminController
             $path = '/';
         }
 
-        if ($path === '/admin/logout' && strtoupper($method) === 'GET') {
+        if ($path === '/pepebulkov/logout' && strtoupper($method) === 'GET') {
             $this->logout();
 
             return;
         }
 
-        if ($path === '/admin' && strtoupper($method) === 'GET') {
+        if ($path === '/pepebulkov' && strtoupper($method) === 'GET') {
             $this->loginGet();
 
             return;
         }
 
-        if ($path === '/admin' && strtoupper($method) === 'POST') {
+        if ($path === '/pepebulkov' && strtoupper($method) === 'POST') {
             $this->loginPost();
 
             return;
         }
 
-        if ($path === '/admin/orders' && strtoupper($method) === 'GET') {
+        if ($path === '/pepebulkov/orders' && strtoupper($method) === 'GET') {
             $this->requireAuth();
             $this->ordersGet();
 
             return;
         }
 
-        if (preg_match('#^/admin/orders/([^/]+)/confirm$#', $path, $m) === 1 && strtoupper($method) === 'POST') {
+        if (preg_match('#^/pepebulkov/orders/([^/]+)/confirm$#', $path, $m) === 1 && strtoupper($method) === 'POST') {
             $this->requireAuth();
             $this->confirmPost($m[1]);
 
             return;
         }
 
-        if (preg_match('#^/admin/orders/([^/]+)/tracking$#', $path, $m) === 1 && strtoupper($method) === 'POST') {
+        if (preg_match('#^/pepebulkov/orders/([^/]+)/tracking$#', $path, $m) === 1 && strtoupper($method) === 'POST') {
             $this->requireAuth();
             $this->trackingManualPost($m[1]);
 
             return;
         }
 
-        if (preg_match('#^/admin/orders/([^/]+)$#', $path, $m) === 1 && strtoupper($method) === 'GET') {
+        if (preg_match('#^/pepebulkov/orders/([^/]+)$#', $path, $m) === 1 && strtoupper($method) === 'GET') {
             $this->requireAuth();
             $this->orderDetailGet($m[1]);
 

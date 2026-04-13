@@ -56,7 +56,7 @@ final class Router
             return;
         }
 
-        if (str_starts_with($path, '/admin')) {
+        if (str_starts_with($path, '/pepebulkov')) {
             (new AdminController())->dispatch($path, strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 
             return;

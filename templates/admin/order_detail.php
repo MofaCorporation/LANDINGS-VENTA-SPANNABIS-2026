@@ -112,8 +112,8 @@ $trackFollowUrl = $tn !== ''
     <header>
       <h1>Pedido #<?= htmlspecialchars($ref, ENT_QUOTES, 'UTF-8') ?></h1>
       <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
-        <a class="btn" href="<?= htmlspecialchars($bp . '/' . $lang . '/admin/orders', ENT_QUOTES, 'UTF-8') ?>">← Lista</a>
-        <a class="btn btn-primary" href="<?= htmlspecialchars($bp . '/' . $lang . '/admin/logout', ENT_QUOTES, 'UTF-8') ?>">Salir</a>
+        <a class="btn" href="<?= htmlspecialchars($bp . '/' . $lang . '/pepebulkov/orders', ENT_QUOTES, 'UTF-8') ?>">← Lista</a>
+        <a class="btn btn-primary" href="<?= htmlspecialchars($bp . '/' . $lang . '/pepebulkov/logout', ENT_QUOTES, 'UTF-8') ?>">Salir</a>
       </div>
     </header>
 
@@ -131,7 +131,7 @@ $trackFollowUrl = $tn !== ''
         <div class="err-box"><strong>Packlink:</strong> <?= htmlspecialchars($pkErr, ENT_QUOTES, 'UTF-8') ?></div>
       <?php } ?>
       <?php if ($st === 'pending_transfer') { ?>
-        <form style="margin-top:1rem" method="post" action="<?= htmlspecialchars($bp . '/' . $lang . '/admin/orders/' . rawurlencode($ref) . '/confirm', ENT_QUOTES, 'UTF-8') ?>">
+        <form style="margin-top:1rem" method="post" action="<?= htmlspecialchars($bp . '/' . $lang . '/pepebulkov/orders/' . rawurlencode($ref) . '/confirm', ENT_QUOTES, 'UTF-8') ?>">
           <input type="hidden" name="csrf" value="<?= htmlspecialchars(admin_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
           <button class="submit" type="submit">Confirmar pago y crear envío</button>
         </form>
@@ -172,7 +172,7 @@ $trackFollowUrl = $tn !== ''
       <div class="card">
         <h2>Tracking manual</h2>
         <p style="margin:0 0 0.5rem;font-size:0.88rem;color:var(--tf-text-muted)">Si Packlink no creó el envío automáticamente, introduce el número de seguimiento (el pedido sigue como pagado).</p>
-        <form method="post" action="<?= htmlspecialchars($bp . '/' . $lang . '/admin/orders/' . rawurlencode($ref) . '/tracking', ENT_QUOTES, 'UTF-8') ?>">
+        <form method="post" action="<?= htmlspecialchars($bp . '/' . $lang . '/pepebulkov/orders/' . rawurlencode($ref) . '/tracking', ENT_QUOTES, 'UTF-8') ?>">
           <input type="hidden" name="csrf" value="<?= htmlspecialchars(admin_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
           <label for="tracking_number">Número de seguimiento</label>
           <input id="tracking_number" name="tracking_number" type="text" required maxlength="100" autocomplete="off">

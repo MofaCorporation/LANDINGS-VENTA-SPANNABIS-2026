@@ -105,7 +105,7 @@ $bp = base_path();
     <?php if ($error !== '') { ?>
       <div class="err"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
     <?php } ?>
-    <form method="post" action="<?= htmlspecialchars($bp . '/' . $lang . '/admin', ENT_QUOTES, 'UTF-8') ?>">
+    <form method="post" action="<?= htmlspecialchars($bp . '/' . $lang . '/pepebulkov', ENT_QUOTES, 'UTF-8') ?>">
       <input type="hidden" name="csrf" value="<?= htmlspecialchars(admin_csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
       <label for="username">Usuario</label>
       <input id="username" name="username" type="text" autocomplete="username" required>
