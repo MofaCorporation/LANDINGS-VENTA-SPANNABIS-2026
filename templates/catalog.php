@@ -23,14 +23,14 @@ $catalogSwitchText    = $catalogTargetLang === 'en' ? 'ENGLISH' : 'ESPAÑOL';
 <?php
 $catalogHeaderTitle = Lang::current() === 'es' ? 'EL JARDÍN SECRETO' : 'THE SECRET GARDEN';
 ?>
-<header style="display:flex;align-items:center;gap:2rem;padding:1rem 2rem;padding-right:10rem;background:#0e0610;border-bottom:8px solid #000;box-sizing:border-box;flex-wrap:wrap;position:relative;color:#fff;">
+<header style="display:flex;align-items:center;gap:clamp(1rem,3vw,2rem);padding:1rem 2rem;padding-right:10rem;background:#0e0610;border-bottom:8px solid #000;box-sizing:border-box;flex-wrap:wrap;position:relative;color:#fff;">
     <div style="position:absolute;top:1rem;right:1rem;z-index:20;">
         <a href="<?= $catalogLangHref ?>" class="tf-lang-switch__btn"><img src="<?= htmlspecialchars($catalogSwitchFlagSrc, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($catalogSwitchAlt, ENT_QUOTES, 'UTF-8') ?>" width="24" height="18" style="width:20px;height:auto;vertical-align:middle;margin-right:4px;display:inline-block"> <?= htmlspecialchars($catalogSwitchText, ENT_QUOTES, 'UTF-8') ?></a>
     </div>
-    <a href="<?= htmlspecialchars(url_lang('/'), ENT_QUOTES, 'UTF-8') ?>" style="display:inline-flex;line-height:0;text-decoration:none;flex-shrink:0;">
-        <img src="<?= htmlspecialchars($logo, ENT_QUOTES, 'UTF-8') ?>" alt="<?= Lang::t('site.brand') ?>" width="320" height="107" style="height:60px;width:auto;max-width:min(100%,280px);object-fit:contain;display:block;" decoding="async">
+    <a href="<?= htmlspecialchars(url_lang('/'), ENT_QUOTES, 'UTF-8') ?>" style="display:inline-flex;line-height:0;text-decoration:none;flex-shrink:0;align-items:center;">
+        <img src="<?= htmlspecialchars($logo, ENT_QUOTES, 'UTF-8') ?>" alt="<?= Lang::t('site.brand') ?>" width="320" height="107" style="height:clamp(4.75rem,14vw,6.75rem);width:auto;max-width:min(100%,300px);object-fit:contain;display:block;" decoding="async">
     </a>
-    <h1 style="font-family:Bangers,'Segoe UI',Impact,sans-serif;color:#ff00aa;font-size:2rem;margin:0;font-weight:400;line-height:1.1;text-transform:uppercase;letter-spacing:0.02em;flex:1;min-width:12rem;"><?= htmlspecialchars($catalogHeaderTitle, ENT_QUOTES, 'UTF-8') ?></h1>
+    <h1 style="font-family:Bangers,'Segoe UI',Impact,sans-serif;color:var(--pc,#a3ff12);font-size:clamp(1.35rem,3.8vw,1.95rem);margin:0;font-weight:400;line-height:1.05;text-transform:uppercase;letter-spacing:0.02em;flex:0 1 auto;min-width:0;max-width:100%;text-shadow:0 0 1px rgba(163,255,18,0.35);"><?= htmlspecialchars($catalogHeaderTitle, ENT_QUOTES, 'UTF-8') ?></h1>
 </header>
 
 <main class="tf-catalog-main">
