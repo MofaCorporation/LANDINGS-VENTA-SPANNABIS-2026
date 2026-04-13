@@ -11,39 +11,41 @@ final class CatalogController extends BaseController
     private const HTML_THEME_STYLE = '--pc: #a3ff12; --pc-dim: #8fd010; --sec: #00ffcc; --ter: #ff51fa; --bg: #0b0b10; --surf: #0e0e12; --surf-cont: #15151f; --on-pc: #0e1a00; --nav-stroke: #00ffcc;';
 
     /**
-     * @return list<array{slug: string, hero: string, nameKey: string, taglineKey: string}>
+     * Nombres de variedad siempre en inglés (no i18n).
+     *
+     * @return list<array{name: string, slug: string, hero: string, taglineKey: string}>
      */
     private static function catalogItems(): array
     {
         return [
             [
+                'name'       => 'DJ PIGGY',
                 'slug'       => 'dj-piggy',
                 'hero'       => '/assets/img/productos/dj-piggy/hero-dj-piggy-web.png',
-                'nameKey'    => 'catalog.items.dj_piggy.name',
                 'taglineKey' => 'product.dj_piggy.subtitle',
             ],
             [
+                'name'       => 'HOLY BOSS',
                 'slug'       => 'holy-boss',
                 'hero'       => '/assets/img/productos/holy-boss/hero-holy-boss-web.png',
-                'nameKey'    => 'catalog.items.holy_boss.name',
                 'taglineKey' => 'product.holy_boss.subtitle',
             ],
             [
+                'name'       => 'LADY CUPCAKE',
                 'slug'       => 'lady-cupcake',
                 'hero'       => '/assets/img/productos/lady-cupcake/hero-lady-cupcake-web.png',
-                'nameKey'    => 'catalog.items.lady_cupcake.name',
                 'taglineKey' => 'product.lady_cupcake.subtitle',
             ],
             [
+                'name'       => 'NITRO RACER',
                 'slug'       => 'nitro-bud',
                 'hero'       => '/assets/img/productos/nitro-bud/hero-nitro-bud-web.png',
-                'nameKey'    => 'catalog.items.nitro_bud.name',
                 'taglineKey' => 'product.nitro_bud.subtitle',
             ],
             [
+                'name'       => 'TOXIC MUTANT',
                 'slug'       => 'toxic-mutant',
                 'hero'       => '/assets/img/productos/toxic-mutant/hero-toxic-mutat-web.png',
-                'nameKey'    => 'catalog.items.toxic_mutant.name',
                 'taglineKey' => 'product.toxic_mutant.subtitle',
             ],
         ];

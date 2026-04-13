@@ -34,53 +34,7 @@ body {
   letter-spacing: 0.02em;
 }
 
-/* —— Catálogo: cabecera / main / pie (CSS propio; no depender de utilidades Tailwind del bundle) —— */
-.tf-catalog-site-header {
-  position: relative;
-  z-index: 1;
-  border-bottom: 8px solid #000;
-  background: var(--surf, #0e0e12);
-  color: #fff;
-  padding: 5.5rem 1.5rem 2rem;
-  text-align: center;
-}
-
-@media (min-width: 768px) {
-  .tf-catalog-site-header {
-    padding-top: 6.5rem;
-  }
-}
-
-.tf-catalog-site-header__inner {
-  max-width: 80rem;
-  margin: 0 auto;
-}
-
-.tf-catalog-site-header__logo-link {
-  display: inline-block;
-  text-decoration: none;
-  line-height: 0;
-}
-
-.tf-catalog-site-header__logo-link:focus-visible {
-  outline: 2px solid var(--sec, #00ffcc);
-  outline-offset: 4px;
-}
-
-.tf-catalog-site-header__logo {
-  height: 4rem;
-  width: auto;
-  max-width: min(100%, 280px);
-  object-fit: contain;
-}
-
-@media (min-width: 768px) {
-  .tf-catalog-site-header__logo {
-    height: 5rem;
-    max-width: 320px;
-  }
-}
-
+/* —— Catálogo: main / intro (cabecera con estilos inline en templates/catalog.php) —— */
 .tf-catalog-main {
   background: var(--bg, #0b0b10);
   color: #fff;

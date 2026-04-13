@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Lang\Lang;
 
-/** @var list<array{slug: string, hero: string, nameKey: string, taglineKey: string}> $catalogItems */
+/** @var list<array{name: string, slug: string, hero: string, taglineKey: string}> $catalogItems */
 
 $logo = asset_url('/assets/img/ui/logo-tarumbas-farm.png');
 
@@ -20,21 +20,22 @@ $catalogSwitchText    = $catalogTargetLang === 'en' ? 'ENGLISH' : 'ESPAÑOL';
 #root > .tf-lang-switch { display: none !important; }
 </style>
 
-<header class="tf-catalog-site-header">
+<?php
+$catalogHeaderTitle = Lang::current() === 'es' ? 'EL JARDÍN SECRETO' : 'THE SECRET GARDEN';
+?>
+<header style="display:flex;align-items:center;gap:2rem;padding:1rem 2rem;padding-right:10rem;background:#0e0610;border-bottom:8px solid #000;box-sizing:border-box;flex-wrap:wrap;position:relative;color:#fff;">
     <div style="position:absolute;top:1rem;right:1rem;z-index:20;">
         <a href="<?= $catalogLangHref ?>" class="tf-lang-switch__btn"><img src="<?= htmlspecialchars($catalogSwitchFlagSrc, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($catalogSwitchAlt, ENT_QUOTES, 'UTF-8') ?>" width="24" height="18" style="width:20px;height:auto;vertical-align:middle;margin-right:4px;display:inline-block"> <?= htmlspecialchars($catalogSwitchText, ENT_QUOTES, 'UTF-8') ?></a>
     </div>
-    <div class="tf-catalog-site-header__inner">
-        <a href="<?= htmlspecialchars(url_lang('/'), ENT_QUOTES, 'UTF-8') ?>" class="tf-catalog-site-header__logo-link">
-            <img src="<?= htmlspecialchars($logo, ENT_QUOTES, 'UTF-8') ?>" alt="<?= Lang::t('site.brand') ?>" width="320" height="107" class="tf-catalog-site-header__logo" decoding="async">
-        </a>
-    </div>
+    <a href="<?= htmlspecialchars(url_lang('/'), ENT_QUOTES, 'UTF-8') ?>" style="display:inline-flex;line-height:0;text-decoration:none;flex-shrink:0;">
+        <img src="<?= htmlspecialchars($logo, ENT_QUOTES, 'UTF-8') ?>" alt="<?= Lang::t('site.brand') ?>" width="320" height="107" style="height:60px;width:auto;max-width:min(100%,280px);object-fit:contain;display:block;" decoding="async">
+    </a>
+    <h1 style="font-family:Bangers,'Segoe UI',Impact,sans-serif;color:#ff00aa;font-size:2rem;margin:0;font-weight:400;line-height:1.1;text-transform:uppercase;letter-spacing:0.02em;flex:1;min-width:12rem;"><?= htmlspecialchars($catalogHeaderTitle, ENT_QUOTES, 'UTF-8') ?></h1>
 </header>
 
 <main class="tf-catalog-main">
     <div class="tf-catalog-main__inner">
         <div class="tf-catalog-intro">
-            <h1 class="tf-catalog-intro__title tf-title-bangers"><?= Lang::t('catalog.heading') ?></h1>
             <p class="tf-catalog-intro__sub"><?= Lang::t('catalog.subheading') ?></p>
         </div>
 
@@ -77,7 +78,7 @@ $catalogSwitchText    = $catalogTargetLang === 'en' ? 'ENGLISH' : 'ESPAÑOL';
                 </div>
                 <div style="flex:0 0 50%;width:50%;max-width:50%;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;padding:1.5rem;min-width:0;overflow-wrap:break-word;">
                     <div>
-                        <h2 style="margin:0;font-family:Bangers,'Segoe UI',Impact,sans-serif;font-size:clamp(1.35rem,3.5vw,2.35rem);font-weight:400;line-height:1;text-transform:uppercase;color:#a3ff12;"><?= Lang::t($item['nameKey']) ?></h2>
+                        <h2 style="margin:0;font-family:Bangers,'Segoe UI',Impact,sans-serif;font-size:clamp(1.35rem,3.5vw,2.35rem);font-weight:400;line-height:1;text-transform:uppercase;color:#a3ff12;"><?= htmlspecialchars($item['name'], ENT_QUOTES, 'UTF-8') ?></h2>
                         <p style="margin:0.65rem 0 0;font-family:system-ui,-apple-system,sans-serif;font-size:0.95rem;font-weight:700;line-height:1.35;color:#e4e2e2;"><?= Lang::t($item['taglineKey']) ?></p>
                     </div>
                     <span style="display:block;box-sizing:border-box;margin-top:1.1rem;text-align:center;padding:0.65rem 0.75rem;border:3px solid #000;background:#a3ff12;color:#0e1a00;font-family:system-ui,-apple-system,sans-serif;font-size:0.78rem;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;box-shadow:0 0 12px rgba(163,255,18,0.55),4px 4px 0 #000;"><?= Lang::t('catalog.cta_see_more') ?></span>

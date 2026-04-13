@@ -463,14 +463,7 @@
     },
     "heading": "El Huerto Secreto",
     "subheading": "Las cinco variedades en un solo lugar — enlace privado.",
-    "cta_see_more": "VER MÁS",
-    "items": {
-      "dj_piggy": { "name": "DJ PIGGY" },
-      "holy_boss": { "name": "HOLY BOSS" },
-      "lady_cupcake": { "name": "LADY CUPCAKE" },
-      "nitro_bud": { "name": "NITRO RACER" },
-      "toxic_mutant": { "name": "TOXIC MUTANT" }
-    }
+    "cta_see_more": "VER MÁS"
   },
   "errors": {
     "not_found": "Página no encontrada"
