@@ -456,6 +456,22 @@
       "ZW": "Zimbabwe"
     }
   },
+  "catalog": {
+    "meta": {
+      "document_title": "The Secret Garden · Tarumba's Farm",
+      "description": "Private collection: all five Los monstruos de Tarumba varieties."
+    },
+    "heading": "The Secret Garden",
+    "subheading": "All five varieties in one place — private link.",
+    "cta_see_more": "View landing",
+    "items": {
+      "dj_piggy": { "name": "DJ PIGGY" },
+      "holy_boss": { "name": "HOLY BOSS" },
+      "lady_cupcake": { "name": "LADY CUPCAKE" },
+      "nitro_bud": { "name": "NITRO BUD" },
+      "toxic_mutant": { "name": "TOXIC MUTANT" }
+    }
+  },
   "errors": {
     "not_found": "Page not found"
   },

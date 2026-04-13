@@ -102,6 +102,13 @@ final class OrderPaidEmailTemplates
 
         $addrOneLine = trim($address . ', ' . $postal . ' ' . $city . ', ' . $province . ', ' . $country, " ,");
 
+        $secretCatalogSuffix = $lang === 'en' ? '/en/secret-catalog' : '/es/catalogo-secreto';
+        $secretCatalogUrl    = rtrim(base_url(), '/') . base_path() . $secretCatalogSuffix;
+        $labelSecretCatalog  = $lang === 'en' ? 'The Secret Garden' : 'El Huerto Secreto';
+        $introSecretCatalog  = $lang === 'en'
+            ? 'Browse all five varieties in our private catalog.'
+            : 'Explora las cinco variedades en nuestro catálogo privado.';
+
         $html = '<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#0b0b10;color:#f6f6f6;font-family:Arial,Helvetica,sans-serif">'
             . '<div style="max-width:720px;margin:0 auto;padding:24px">'
             . '<div style="border:6px solid #000;background:linear-gradient(135deg,#111827,#0b0b10);box-shadow:10px 10px #000;padding:22px">'
@@ -132,6 +139,10 @@ final class OrderPaidEmailTemplates
             . $e($labelTotal) . ': <span style="color:#a3ff12">' . $e(format_price_cents($totalCents)) . '</span>'
             . '</div>'
             . '<div style="margin-top:16px;color:#bcbcbc;font-size:14px">' . $e($labelThanks) . '</div>'
+            . '<div style="margin-top:20px;border:4px solid #000;background:#111827;padding:14px;text-align:center">'
+            . '<div style="color:#e4e2e2;font-size:14px;margin-bottom:10px">' . $e($introSecretCatalog) . '</div>'
+            . '<a href="' . $e($secretCatalogUrl) . '" style="display:inline-block;border:4px solid #000;background:#a3ff12;color:#0e1a00;font-weight:900;text-transform:uppercase;text-decoration:none;padding:12px 18px;font-size:15px;box-shadow:6px 6px #000">' . $e($labelSecretCatalog) . '</a>'
+            . '</div>'
             . '</div>'
             . '<div style="margin-top:14px;color:#a0a0a0;font-size:12px">'
             . $e("Tarumba's Farm")
@@ -147,7 +158,8 @@ final class OrderPaidEmailTemplates
             . ($lang === 'en' ? 'Shipping address:' : 'Dirección de envío:') . "\n"
             . ($addrOneLine !== '' ? $addrOneLine : '—') . "\n\n"
             . ($lang === 'en' ? 'Shipping method:' : 'Método de envío:') . ' ' . ($shipLabel !== '' ? $shipLabel : '—') . "\n"
-            . ($lang === 'en' ? 'Total:' : 'Total:') . ' ' . format_price_cents($totalCents) . "\n";
+            . ($lang === 'en' ? 'Total:' : 'Total:') . ' ' . format_price_cents($totalCents) . "\n\n"
+            . ($lang === 'en' ? 'Private catalog:' : 'Catálogo privado:') . ' ' . $secretCatalogUrl . "\n";
 
         return [$html, $text];
     }

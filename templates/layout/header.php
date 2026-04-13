@@ -6,6 +6,7 @@ use App\Lang\Lang;
 
 $pageTitleKey       = $pageTitleKey ?? 'site.default_title';
 $metaDescriptionKey = $metaDescriptionKey ?? 'site.default_title';
+$metaNoIndex        = !empty($metaNoIndex);
 $htmlThemeStyle     = $htmlThemeStyle ?? '';
 $extraModuleSrc     = $extraModuleSrc ?? null;
 $checkoutUi         = !empty($checkoutUi);
@@ -29,6 +30,9 @@ $langSwitchText = $langCurrent === 'es' ? 'ENGLISH' : 'ESPAÑOL';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= Lang::t($metaDescriptionKey) ?>">
+    <?php if ($metaNoIndex) : ?>
+    <meta name="robots" content="noindex,nofollow">
+    <?php endif; ?>
     <title><?= Lang::t($pageTitleKey) ?></title>
     <link rel="canonical" href="<?= $hrefSelf ?>">
     <link rel="alternate" hreflang="es" href="<?= $hrefEs ?>">

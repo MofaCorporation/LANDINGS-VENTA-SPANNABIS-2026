@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Core;
 
 use App\Controllers\AdminController;
+use App\Controllers\CatalogController;
 use App\Controllers\CheckoutController;
 use App\Controllers\HomeController;
 use App\Controllers\ProductController;
@@ -63,6 +64,8 @@ final class Router
         }
 
         match ($path) {
+            '/catalogo-secreto' => (new CatalogController())->catalogoSecreto(),
+            '/secret-catalog'   => (new CatalogController())->secretCatalog(),
             '/lady-cupcake' => (new ProductController())->ladyCupcake(),
             '/dj-piggy'     => (new ProductController())->djPiggy(),
             '/holy-boss'    => (new ProductController())->holyBoss(),

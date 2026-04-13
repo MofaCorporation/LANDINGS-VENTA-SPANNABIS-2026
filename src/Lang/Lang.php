@@ -227,6 +227,12 @@ final class Lang
             $newPath = '/' . $targetLang . ($path === '/' ? '' : $path);
         }
 
+        if (str_ends_with($newPath, '/catalogo-secreto') && $targetLang === 'en') {
+            $newPath = substr($newPath, 0, -strlen('/catalogo-secreto')) . '/secret-catalog';
+        } elseif (str_ends_with($newPath, '/secret-catalog') && $targetLang === 'es') {
+            $newPath = substr($newPath, 0, -strlen('/secret-catalog')) . '/catalogo-secreto';
+        }
+
         return $newPath . ($query !== '' ? '?' . $query : '');
     }
 }

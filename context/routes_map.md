@@ -3,7 +3,7 @@
 |-------|--------|
 | **ID** | `CTX-ROUTES-MAP-001` |
 | **Owner** | `[TODO]` |
-| **LastUpdated** | 2026-04-08 |
+| **LastUpdated** | 2026-04-13 |
 | **SourceOfTruth** | `public/index.php`, `src/Core/Router.php`, `.htaccess`, código real |
 
 ## 0) Propósito
@@ -37,6 +37,8 @@ Listar rutas que la **UI pública** usa y que no deben romperse. Las landings de
 | `/en/checkout/ok` | retorno usuario | P1 | |
 | `/es/checkout/ko` | retorno usuario | P1 | |
 | `/en/checkout/ko` | retorno usuario | P1 | |
+| `/es/catalogo-secreto` | catálogo privado (noindex) | P1 | `CatalogController::catalogoSecreto()`; ES only → redirect EN |
+| `/en/secret-catalog` | catálogo privado (noindex) | P1 | `CatalogController::secretCatalog()`; EN only → redirect ES |
 
 **Query en checkout:** las CTAs usan `?variety=` con el mismo slug kebab (`toxic-mutant`, `nitro-bud`, `dj-piggy`, `holy-boss`, `lady-cupcake`).
 
