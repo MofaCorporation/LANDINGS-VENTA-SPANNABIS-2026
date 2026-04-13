@@ -82,6 +82,7 @@ final class CatalogController extends BaseController
             'metaDescriptionKey' => 'catalog.meta.description',
             'htmlThemeStyle'     => self::HTML_THEME_STYLE,
             'metaNoIndex'        => true,
+            'checkoutUi'         => false,
         ]);
     }
 }

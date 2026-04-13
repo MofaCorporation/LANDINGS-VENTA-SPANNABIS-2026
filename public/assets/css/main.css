@@ -23,7 +23,203 @@ body {
   top: 1rem !important;
   right: 1rem !important;
   left: auto !important;
-  z-index: 50 !important;
+  z-index: 100 !important;
+}
+
+/* Bangers en páginas que solo cargan mount + main (p. ej. catálogo) */
+.tf-title-bangers {
+  font-family: var(--font-bangers, "Bangers", ui-sans-serif, system-ui, sans-serif);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* —— Catálogo: cabecera / main / pie (CSS propio; no depender de utilidades Tailwind del bundle) —— */
+.tf-catalog-site-header {
+  position: relative;
+  z-index: 1;
+  border-bottom: 8px solid #000;
+  background: var(--surf, #0e0e12);
+  color: #fff;
+  padding: 5.5rem 1.5rem 2rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .tf-catalog-site-header {
+    padding-top: 6.5rem;
+  }
+}
+
+.tf-catalog-site-header__inner {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.tf-catalog-site-header__logo-link {
+  display: inline-block;
+  text-decoration: none;
+  line-height: 0;
+}
+
+.tf-catalog-site-header__logo-link:focus-visible {
+  outline: 2px solid var(--sec, #00ffcc);
+  outline-offset: 4px;
+}
+
+.tf-catalog-site-header__logo {
+  height: 4rem;
+  width: auto;
+  max-width: min(100%, 280px);
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .tf-catalog-site-header__logo {
+    height: 5rem;
+    max-width: 320px;
+  }
+}
+
+.tf-catalog-main {
+  background: var(--bg, #0b0b10);
+  color: #fff;
+  padding: 3.5rem 1.5rem 5rem;
+}
+
+@media (min-width: 768px) {
+  .tf-catalog-main {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+}
+
+.tf-catalog-main__inner {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.tf-catalog-intro {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+@media (min-width: 768px) {
+  .tf-catalog-intro {
+    margin-bottom: 4rem;
+  }
+}
+
+.tf-catalog-intro__title {
+  margin: 0 0 1rem;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  line-height: 0.95;
+  color: var(--pc, #a3ff12);
+}
+
+.tf-catalog-intro__sub {
+  margin: 0;
+  font-family: var(--font-headline, "Satoshi", ui-sans-serif, system-ui, sans-serif);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--sec, #00ffcc);
+}
+
+@media (min-width: 768px) {
+  .tf-catalog-intro__sub {
+    font-size: 1.375rem;
+  }
+}
+
+.tf-catalog-legal {
+  border-top: 4px solid #1a1919;
+  background: #000;
+  color: #fff;
+  padding: 3rem 1.5rem 1.5rem;
+  text-align: center;
+}
+
+.tf-catalog-legal__text {
+  max-width: 48rem;
+  margin: 0 auto;
+  font-family: var(--font-body, "Satoshi", ui-sans-serif, system-ui, sans-serif);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #e4e2e2;
+}
+
+@media (min-width: 768px) {
+  .tf-catalog-legal__text {
+    font-size: 1rem;
+  }
+}
+
+.tf-catalog-footer {
+  border-top: 4px solid var(--surf-cont, #15151f);
+  background: var(--bg, #0b0b10);
+  color: #fff;
+  padding: 2rem 1.5rem 2.5rem;
+}
+
+.tf-catalog-footer__inner {
+  max-width: 80rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .tf-catalog-footer__inner {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+  }
+}
+
+.tf-catalog-footer__logo {
+  height: 3.5rem;
+  width: auto;
+  max-width: min(100%, 300px);
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .tf-catalog-footer__logo {
+    height: 4.5rem;
+    max-width: 360px;
+  }
+}
+
+.tf-catalog-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.tf-catalog-footer__link {
+  font-family: var(--font-headline, "Satoshi", ui-sans-serif, system-ui, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a0a0a0;
+  text-decoration: none;
+  transition: color 0.15s ease, text-decoration 0.15s ease;
+}
+
+.tf-catalog-footer__link:hover {
+  color: #fff;
+  text-decoration: line-through;
+}
+
+.tf-catalog-footer__copy {
+  font-family: var(--font-headline, "Satoshi", ui-sans-serif, system-ui, sans-serif);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--sec, #00ffcc);
 }
 
 .tf-lang-switch__btn {
@@ -61,7 +257,7 @@ body {
   width: 100%;
 }
 
-.tf-catalog-card {
+a.tf-catalog-card {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -71,40 +267,31 @@ body {
   border: 4px solid #000;
   background: var(--surf-cont, #15151f);
   box-shadow: 8px 8px #000;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.tf-catalog-card:hover {
+a.tf-catalog-card:hover {
   transform: translateY(-3px);
   box-shadow: 10px 10px #000;
 }
 
+a.tf-catalog-card:focus-visible {
+  outline: 3px solid var(--sec, #00ffcc);
+  outline-offset: 3px;
+}
+
 @media (min-width: 768px) {
-  .tf-catalog-card {
+  a.tf-catalog-card {
     flex-direction: row;
     align-items: flex-start;
   }
 }
 
-.tf-catalog-card__media-link {
-  display: block;
-  flex: 0 0 auto;
-  width: 100%;
-  text-decoration: none;
-  color: inherit;
-}
-
-@media (min-width: 768px) {
-  .tf-catalog-card__media-link {
-    flex: 0 0 50%;
-    width: 50%;
-    max-width: 50%;
-    height: 300px;
-    align-self: flex-start;
-  }
-}
-
 .tf-catalog-card__media {
+  flex: 0 0 auto;
   width: 100%;
   height: 300px;
   min-height: 300px;
@@ -115,6 +302,9 @@ body {
 
 @media (min-width: 768px) {
   .tf-catalog-card__media {
+    flex: 0 0 50%;
+    width: 50%;
+    max-width: 50%;
     height: 300px;
     min-height: 300px;
     border-bottom: none;
@@ -207,16 +397,11 @@ body {
   transition: transform 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
 }
 
-.tf-catalog-card__cta:hover {
+a.tf-catalog-card:hover .tf-catalog-card__cta {
   box-shadow:
     0 0 22px rgba(163, 255, 18, 0.75),
     0 0 36px rgba(0, 255, 204, 0.45),
     6px 6px 0 var(--sec, #00ffcc);
   transform: translateY(-2px);
   color: #000;
-}
-
-.tf-catalog-card__cta:focus-visible {
-  outline: 2px solid var(--sec, #00ffcc);
-  outline-offset: 3px;
 }
