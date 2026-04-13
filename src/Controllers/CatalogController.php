@@ -49,7 +49,7 @@ final class CatalogController extends BaseController
             [
                 'name'      => 'TOXIC MUTANT',
                 'slug'      => 'toxic-mutant',
-                'hero'      => '/assets/img/productos/toxic-mutant/hero-toxic-mutat-web.png',
+                'hero'      => '/assets/img/productos/toxic-mutant/hero-toxic-mutant-web.png',
                 'copy_key'  => 'catalog.toxic_mutant_copy',
                 'cta_key'   => 'catalog.toxic_mutant_cta',
             ],

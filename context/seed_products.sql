@@ -4,7 +4,7 @@
 USE ecommerce;
 
 INSERT INTO products (slug_es, slug_en, name_es, name_en, description_es, description_en, price_cents, stock, image, active) VALUES
-('toxic-mutant', 'toxic-mutant', 'Toxic Mutant', 'Toxic Mutant', '', '', 3490, 999, '/assets/img/productos/toxic-mutant/hero-toxic-mutat-web.png', 1),
+('toxic-mutant', 'toxic-mutant', 'Toxic Mutant', 'Toxic Mutant', '', '', 3490, 999, '/assets/img/productos/toxic-mutant/hero-toxic-mutant-web.png', 1),
 ('nitro-bud', 'nitro-bud', 'Nitro Bud', 'Nitro Bud', '', '', 2990, 999, '/assets/img/productos/nitro-bud/hero-nitro-bud-web.png', 1),
 ('dj-piggy', 'dj-piggy', 'DJ Piggy', 'DJ Piggy', '', '', 3290, 999, '/assets/img/productos/dj-piggy/hero-dj-piggy-web.png', 1),
 ('holy-boss', 'holy-boss', 'Holy Boss', 'Holy Boss', '', '', 3190, 999, '/assets/img/productos/holy-boss/hero-holy-boss-web.png', 1),

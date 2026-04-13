@@ -120,7 +120,7 @@ final class ProductController extends BaseController
             [
                 'prefix'           => 'product.toxic_mutant',
                 'variety'          => 'toxic-mutant',
-                'hero'             => '/assets/img/productos/toxic-mutant/hero-toxic-mutat-web.png',
+                'hero'             => '/assets/img/productos/toxic-mutant/hero-toxic-mutant-web.png',
                 'buyEs'            => '/assets/img/productos/toxic-mutant/comprar-toxic-mutant.png',
                 'buyEn'            => '/assets/img/productos/toxic-mutant/buy-seeds-toxic-mutant.png',
                 'h1'               => ['TOXIC', 'MUTANT'],
