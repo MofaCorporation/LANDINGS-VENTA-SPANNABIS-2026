@@ -458,11 +458,23 @@
   },
   "catalog": {
     "meta": {
-      "document_title": "The Secret Garden · Tarumba's Farm",
+      "document_title": "Secret catalog · Tarumba's Farm",
       "description": "Private collection: all five Los monstruos de Tarumba varieties."
     },
-    "heading": "THE SECRET GARDEN",
-    "cta_see_more": "SEE MORE"
+    "heading": "WELCOME TO THE GARDEN BASEMENT.",
+    "subheading": "Not everyone gets in. Only those with dirt under their nails and resin in their veins. Unlock the forbidden catalog.",
+    "footer_headline": "THE HARVEST WAITS FOR NO ONE.",
+    "footer_sub": "The link will self-destruct when stock runs out. Choose your mutation or die wondering.",
+    "dj_piggy_copy": "BOOTH ON FIRE. Mutant rhythm to fry your brain. If you can't handle the voltage, get off the floor.",
+    "dj_piggy_cta": "BURN THE MIX",
+    "holy_boss_copy": "THE STREET DON. Ice-cold purity and solid gold chains. He won't warn you twice: kneel or step aside.",
+    "holy_boss_cta": "KISS THE RING",
+    "toxic_mutant_copy": "PURE RADIOACTIVE POISON. The experiment that got out of hand. Brute force and resin that glows in the dark.",
+    "toxic_mutant_cta": "ENTER THE LAB",
+    "nitro_racer_copy": "0 TO 100 IN A BLINK. Liquid adrenaline and fire from the exhaust. Only for those living on the edge of collapse.",
+    "nitro_racer_cta": "FULL GAS",
+    "lady_cupcake_copy": "SWEET BUT LETHAL. She hypnotizes you with the frosting and finishes you with the poison. The diva who runs the block.",
+    "lady_cupcake_cta": "TASTE THE DANGER"
   },
   "errors": {
     "not_found": "Page not found"

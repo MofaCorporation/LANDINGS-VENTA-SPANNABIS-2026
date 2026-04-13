@@ -458,11 +458,23 @@
   },
   "catalog": {
     "meta": {
-      "document_title": "El Huerto Secreto · Tarumba's Farm",
+      "document_title": "Catálogo secreto · Tarumba's Farm",
       "description": "Colección privada: las cinco variedades de Los monstruos de Tarumba."
     },
-    "heading": "EL JARDÍN SECRETO",
-    "cta_see_more": "VER MÁS"
+    "heading": "BIENVENIDO AL SÓTANO DEL JARDÍN.",
+    "subheading": "Aquí no entra cualquiera. Solo los que tienen tierra bajo las uñas y resina en las venas. Desbloquea el catálogo prohibido.",
+    "footer_headline": "LA COSECHA NO ESPERA A NADIE.",
+    "footer_sub": "El enlace se autodestruirá cuando se agote el stock. Elige tu mutación o muere con las ganas.",
+    "dj_piggy_copy": "CABINA EN LLAMAS. Ritmo mutante para freírte los sesos. Si no aguantas el voltaje, lárgate de la pista.",
+    "dj_piggy_cta": "QUEMA LA MEZCLA",
+    "holy_boss_copy": "EL DON DE LA CALLE. Pureza helada y cadenas de oro macizo. No te avisará dos veces: arrodíllate o apártate.",
+    "holy_boss_cta": "BESA EL ANILLO",
+    "toxic_mutant_copy": "PURO VENENO RADIOACTIVO. El experimento que se nos fue de las manos. Fuerza bruta y resina que brilla en la oscuridad.",
+    "toxic_mutant_cta": "ENTRA AL LAB",
+    "nitro_racer_copy": "0 A 100 EN UN PARPADEO. Adrenalina líquida y fuego por el escape. Solo para los que viven al límite del colapso.",
+    "nitro_racer_cta": "GAS A FONDO",
+    "lady_cupcake_copy": "DULCE PERO LETAL. Te hipnotiza con el frosting y te remata con el veneno. La diva que manda en el bloque.",
+    "lady_cupcake_cta": "PRUEBA EL PELIGRO"
   },
   "errors": {
     "not_found": "Página no encontrada"
