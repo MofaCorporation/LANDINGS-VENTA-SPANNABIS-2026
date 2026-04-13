@@ -35,10 +35,6 @@ $catalogHeaderTitle = Lang::current() === 'es' ? 'EL JARDÍN SECRETO' : 'THE SEC
 
 <main class="tf-catalog-main">
     <div class="tf-catalog-main__inner">
-        <div class="tf-catalog-intro">
-            <p class="tf-catalog-intro__sub"><?= Lang::t('catalog.subheading') ?></p>
-        </div>
-
         <style>
         @media (max-width: 767px) {
           a.catalog-secret-card { flex-direction: column !important; flex-wrap: nowrap !important; }

@@ -55,43 +55,6 @@ body {
   box-sizing: border-box;
 }
 
-.tf-catalog-intro {
-  text-align: center;
-  margin: 0 auto 3rem;
-  max-width: 48rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-@media (min-width: 768px) {
-  .tf-catalog-intro {
-    margin-bottom: 4rem;
-  }
-}
-
-.tf-catalog-intro__title {
-  margin: 0 0 1rem;
-  font-size: clamp(2.5rem, 8vw, 4.5rem);
-  line-height: 0.95;
-  color: var(--pc, #a3ff12);
-  text-align: center;
-}
-
-.tf-catalog-intro__sub {
-  margin: 0;
-  font-family: var(--font-headline, "Satoshi", ui-sans-serif, system-ui, sans-serif);
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--sec, #00ffcc);
-  text-align: center;
-}
-
-@media (min-width: 768px) {
-  .tf-catalog-intro__sub {
-    font-size: 1.375rem;
-  }
-}
-
 /* Aviso legal + pie tipo landing: ver templates/catalog.php */
 
 .tf-lang-switch__btn {
