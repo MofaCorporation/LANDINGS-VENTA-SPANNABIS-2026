@@ -8,18 +8,12 @@ use App\Lang\Lang;
 
 $logo = asset_url('/assets/img/ui/logo-tarumbas-farm.png');
 
-if (!isset($langSwitchHref, $langSwitchFlagSrc, $langSwitchAlt, $langSwitchText)) {
-    $requestUriLang = $_SERVER['REQUEST_URI'] ?? '/';
-    $langCur        = Lang::current();
-    $langSwitchHref = htmlspecialchars(
-        base_path() . Lang::switchUrl($requestUriLang, $langCur === 'es' ? 'en' : 'es'),
-        ENT_QUOTES,
-        'UTF-8'
-    );
-    $langSwitchFlagSrc = $langCur === 'es' ? 'https://flagcdn.com/24x18/gb.png' : 'https://flagcdn.com/24x18/es.png';
-    $langSwitchAlt     = $langCur === 'es' ? 'EN' : 'ES';
-    $langSwitchText    = $langCur === 'es' ? 'ENGLISH' : 'ESPAÑOL';
-}
+$catalogTargetLang = Lang::current() === 'es' ? 'en' : 'es';
+$catalogLangPath   = Lang::switchUrl($_SERVER['REQUEST_URI'] ?? '/', $catalogTargetLang);
+$catalogLangHref   = htmlspecialchars(base_path() . $catalogLangPath, ENT_QUOTES, 'UTF-8');
+$catalogSwitchFlagSrc = $catalogTargetLang === 'en' ? 'https://flagcdn.com/24x18/gb.png' : 'https://flagcdn.com/24x18/es.png';
+$catalogSwitchAlt     = $catalogTargetLang === 'en' ? 'EN' : 'ES';
+$catalogSwitchText    = $catalogTargetLang === 'en' ? 'ENGLISH' : 'ESPAÑOL';
 ?>
 <style>
 /* Una sola fila de idioma: la del header del catálogo (misma UI que landings) */
@@ -28,7 +22,7 @@ if (!isset($langSwitchHref, $langSwitchFlagSrc, $langSwitchAlt, $langSwitchText)
 
 <header class="tf-catalog-site-header">
     <div style="position:absolute;top:1rem;right:1rem;z-index:20;">
-        <a href="<?= $langSwitchHref ?>" class="tf-lang-switch__btn"><img src="<?= htmlspecialchars($langSwitchFlagSrc, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($langSwitchAlt, ENT_QUOTES, 'UTF-8') ?>" width="24" height="18" style="width:20px;height:auto;vertical-align:middle;margin-right:4px;display:inline-block"> <?= htmlspecialchars($langSwitchText, ENT_QUOTES, 'UTF-8') ?></a>
+        <a href="<?= $catalogLangHref ?>" class="tf-lang-switch__btn"><img src="<?= htmlspecialchars($catalogSwitchFlagSrc, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($catalogSwitchAlt, ENT_QUOTES, 'UTF-8') ?>" width="24" height="18" style="width:20px;height:auto;vertical-align:middle;margin-right:4px;display:inline-block"> <?= htmlspecialchars($catalogSwitchText, ENT_QUOTES, 'UTF-8') ?></a>
     </div>
     <div class="tf-catalog-site-header__inner">
         <a href="<?= htmlspecialchars(url_lang('/'), ENT_QUOTES, 'UTF-8') ?>" class="tf-catalog-site-header__logo-link">
@@ -93,43 +87,4 @@ if (!isset($langSwitchHref, $langSwitchFlagSrc, $langSwitchAlt, $langSwitchText)
         </div>
     </div>
 </main>
-
-<?php
-/* Mismo contenido que landing.php (aviso legal + footer). Estilos embebidos: el bundle Tailwind puede no incluir estas utilidades en catálogo. */
-?>
-<style>
-.catalog-landing-legal { border-top: 4px solid #1a1919; background: #000; color: #fff; padding: 2.5rem 1.5rem 1.5rem; text-align: center; }
-.catalog-landing-legal p { max-width: 48rem; margin: 0 auto; font-family: var(--font-body, system-ui, -apple-system, sans-serif); font-size: 0.875rem; line-height: 1.6; color: #e4e2e2; }
-@media (min-width: 768px) { .catalog-landing-legal p { font-size: 1rem; } }
-.catalog-landing-footer { border-top: 4px solid var(--surf-cont, #15151f); background: var(--bg, #0b0b10); color: #fff; padding: 2rem 1.5rem 2.5rem; }
-.catalog-landing-footer__inner { max-width: 80rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
-@media (min-width: 768px) {
-  .catalog-landing-footer__inner { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 2rem; }
-}
-.catalog-landing-footer__logo { height: 3.5rem; width: auto; max-width: min(100%, 300px); object-fit: contain; display: block; }
-@media (min-width: 768px) { .catalog-landing-footer__logo { height: 4.5rem; max-width: 360px; } }
-@media (min-width: 1024px) { .catalog-landing-footer__logo { height: 5rem; max-width: 400px; } }
-.catalog-landing-footer__links { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; }
-.catalog-landing-footer__links a { font-family: var(--font-headline, system-ui, -apple-system, sans-serif); font-size: 0.75rem; font-weight: 700; color: #a0a0a0; text-decoration: none; transition: color 0.15s ease; }
-.catalog-landing-footer__links a:hover { color: #fff; text-decoration: line-through; }
-.catalog-landing-footer__copy { font-family: var(--font-headline, system-ui, -apple-system, sans-serif); font-size: 0.75rem; font-weight: 700; color: var(--sec, #00ffcc); }
-</style>
-
-<section class="catalog-landing-legal" aria-label="<?= Lang::t('footer.legal') ?>">
-<p><?= Lang::t('product.common.legal') ?></p>
-</section>
-
-<footer class="catalog-landing-footer">
-<div class="catalog-landing-footer__inner">
-<div>
-<img src="<?= htmlspecialchars($logo, ENT_QUOTES, 'UTF-8') ?>" alt="<?= Lang::t('site.brand') ?>" width="320" height="107" class="catalog-landing-footer__logo" decoding="async">
-</div>
-<div class="catalog-landing-footer__links">
-<a href="#"><?= Lang::t('footer.terms') ?></a>
-<a href="#"><?= Lang::t('footer.legal') ?></a>
-<a href="#"><?= Lang::t('footer.ig') ?></a>
-<a href="#"><?= Lang::t('footer.x') ?></a>
-</div>
-<div class="catalog-landing-footer__copy"><?= Lang::t('footer.copy', ['year' => (string) date('Y')]) ?></div>
-</div>
-</footer>
+<?php /* Aviso legal + pie: templates/layout/footer.php (useSiteFooterBlock) */ ?>

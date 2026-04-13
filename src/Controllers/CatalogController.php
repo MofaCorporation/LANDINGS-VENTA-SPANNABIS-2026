@@ -77,12 +77,13 @@ final class CatalogController extends BaseController
     private function renderCatalog(): void
     {
         $this->render('catalog', [
-            'catalogItems'       => self::catalogItems(),
-            'pageTitleKey'       => 'catalog.meta.document_title',
-            'metaDescriptionKey' => 'catalog.meta.description',
-            'htmlThemeStyle'     => self::HTML_THEME_STYLE,
-            'metaNoIndex'        => true,
-            'checkoutUi'         => false,
+            'catalogItems'         => self::catalogItems(),
+            'pageTitleKey'         => 'catalog.meta.document_title',
+            'metaDescriptionKey'   => 'catalog.meta.description',
+            'htmlThemeStyle'       => self::HTML_THEME_STYLE,
+            'metaNoIndex'          => true,
+            'checkoutUi'           => false,
+            'useSiteFooterBlock'   => true,
         ]);
     }
 }
