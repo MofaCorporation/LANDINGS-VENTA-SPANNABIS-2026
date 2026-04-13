@@ -23,20 +23,24 @@ $logo = asset_url('/assets/img/ui/logo-tarumbas-farm.png');
             <p class="font-[family-name:var(--font-headline)] text-xl font-bold text-[var(--sec)] md:text-2xl"><?= Lang::t('catalog.subheading') ?></p>
         </div>
 
-        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+        <div class="tf-catalog-stack">
             <?php foreach ($catalogItems as $item) :
                 $heroUrl = asset_url($item['hero']);
                 $landingHref = url_lang('/' . $item['slug']);
                 ?>
-            <article class="tf-panel-sticker flex flex-col overflow-hidden border-4 border-black bg-[var(--surf-cont)] sticker-shadow transition-transform hover:-translate-y-1">
-                <a href="<?= htmlspecialchars($landingHref, ENT_QUOTES, 'UTF-8') ?>" class="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sec)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]">
-                    <img src="<?= htmlspecialchars($heroUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" class="aspect-[4/3] w-full object-cover border-b-4 border-black" width="800" height="600" loading="lazy" decoding="async">
+            <article class="tf-catalog-card tf-panel-sticker">
+                <a href="<?= htmlspecialchars($landingHref, ENT_QUOTES, 'UTF-8') ?>" class="tf-catalog-card__media-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sec)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]">
+                    <div class="tf-catalog-card__media">
+                        <img src="<?= htmlspecialchars($heroUrl, ENT_QUOTES, 'UTF-8') ?>" alt="" class="tf-catalog-card__img" width="800" height="600" loading="lazy" decoding="async">
+                    </div>
                 </a>
-                <div class="flex flex-1 flex-col gap-4 p-6">
-                    <h2 class="tf-title-bangers text-3xl uppercase leading-none text-[var(--pc)] md:text-4xl"><?= Lang::t($item['nameKey']) ?></h2>
-                    <p class="font-[family-name:var(--font-body)] text-base leading-snug text-[#e4e2e2]"><?= Lang::t($item['taglineKey']) ?></p>
-                    <div class="mt-auto pt-2">
-                        <a href="<?= htmlspecialchars($landingHref, ENT_QUOTES, 'UTF-8') ?>" class="inline-block w-full border-4 border-black bg-[var(--pc)] px-4 py-3 text-center font-[family-name:var(--font-headline)] text-sm font-black uppercase text-[var(--on-pc)] sticker-shadow transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sec)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surf-cont)]"><?= Lang::t('catalog.cta_see_more') ?></a>
+                <div class="tf-catalog-card__body">
+                    <div class="tf-catalog-card__text">
+                        <h2 class="tf-catalog-card__title tf-title-bangers"><?= Lang::t($item['nameKey']) ?></h2>
+                        <p class="tf-catalog-card__tagline"><?= Lang::t($item['taglineKey']) ?></p>
+                    </div>
+                    <div class="tf-catalog-card__cta-wrap">
+                        <a href="<?= htmlspecialchars($landingHref, ENT_QUOTES, 'UTF-8') ?>" class="tf-catalog-card__cta"><?= Lang::t('catalog.cta_see_more') ?></a>
                     </div>
                 </div>
             </article>
